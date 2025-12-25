@@ -379,9 +379,18 @@
 
     <div class="container">
         <h1>⚔️ LoL Civil War</h1>
-        <!-- <div class="sub-title">배정 라인의 선호도(MAIN/SUB/AUTO)를 명확히 표시합니다.</div> -->
+        <div class="sub-title"></div>
 
         <div class="input-wrapper">
+            <div
+                style="background: #252525; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed #555; display:flex; gap:10px; align-items: center;">
+                <input type="text" id="importCode" placeholder="친구에게 받은 시리얼 코드를 여기에 붙여넣기..."
+                    style="background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
+                <button onclick="importPlayerCode()"
+                    style="background: #333; color: white; width: 80px; border:1px solid #555; padding: 10px;">📥
+                    추가</button>
+            </div>
+
             <div class="input-row">
                 <div style="flex: 2;">
                     <span class="label">소환사명</span>
@@ -411,6 +420,7 @@
                     </select>
                 </div>
             </div>
+
             <div class="input-row">
                 <div style="flex: 1;"><span class="label">주 포지션</span><select id="pMainPos">
                         <option value="ALL">🎲 랜덤</option>
@@ -433,7 +443,12 @@
                     <span style="font-size: 0.9rem; color: #ccc;">🧠 메인오더 가능</span>
                 </label>
             </div>
-            <button class="btn-add" onclick="addPlayer()">참가자 등록 (+)</button>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn-add" onclick="addPlayer()" style="flex:2;">참가자 등록 (+)</button>
+                <button onclick="exportPlayerCode()"
+                    style="flex:1; background: #444; color: #ccc; border: 1px solid #555;">📤 정보 공유 (코드복사)</button>
+            </div>
         </div>
 
         <div class="header-area">
@@ -508,7 +523,7 @@
 
         window.onload = function () { loadData(); initializeModalSelects(); };
 
-        // 모달 내 Select 박스 초기화 (v5.0 동일)
+    
         function initializeModalSelects() {
             const createOptions = (selectId, options, isTier = false) => {
                 const selectEl = document.getElementById(selectId);
@@ -530,30 +545,45 @@
         }
 
         function calculateFinalScore(tierScore, condVal, isOrder) {
-            let finalScore = (tierScore * condVal) + (isOrder ? 50 : 0);
-            return Math.round(finalScore);
+            // [FIX] NaN 방지 안전 장치
+            const t = isNaN(Number(tierScore)) ? 0 : Number(tierScore);
+            const c = isNaN(Number(condVal)) ? 1.0 : Number(condVal);
+            const o = isOrder ? 50 : 0;
+            return Math.round((t * c) + o);
         }
 
-        // 새 참가자 추가 (v5.0 동일)
+        // 새 참가자 추가
         function addPlayer() {
             const name = document.getElementById('pName').value.trim();
             if (!name) return alert("이름을 입력하세요.");
             if (players.length >= 10) return alert("최대 10명입니다.");
 
-            const tierSelect = document.getElementById('pTier');
-            const condVal = parseFloat(document.getElementById('pCondition').value);
+            const tierVal = document.getElementById('pTier').value;
+            const condVal = document.getElementById('pCondition').value;
             const isOrder = document.getElementById('pOrder').checked;
+
+            // [FIX] 숫자 변환 및 유효성 검사
+            const tierScore = parseInt(tierVal, 10);
+            const condition = parseFloat(condVal);
+
+            if (isNaN(tierScore) || isNaN(condition)) {
+                return alert("티어 또는 컨디션 정보가 올바르지 않습니다.");
+            }
+
+            // 티어 이름 찾기
+            const tierSelect = document.getElementById('pTier');
+            const tierName = tierSelect.selectedOptions[0].text;
 
             players.push({
                 id: Date.now(),
                 name,
-                rawTier: parseInt(tierSelect.value),
-                tierName: tierSelect.selectedOptions[0].text,
-                condition: condVal,
+                rawTier: tierScore,
+                tierName: tierName,
+                condition: condition,
                 isOrder,
                 mainPos: document.getElementById('pMainPos').value,
                 subPos: document.getElementById('pSubPos').value,
-                finalScore: calculateFinalScore(parseInt(tierSelect.value), condVal, isOrder)
+                finalScore: calculateFinalScore(tierScore, condition, isOrder)
             });
 
             document.getElementById('pName').value = '';
@@ -561,7 +591,7 @@
             saveAndRender();
         }
 
-        // 모달 열기 (v5.0 동일)
+        // 모달 열기
         function openModal(index) {
             editingIndex = index;
             const p = players[index];
@@ -576,20 +606,24 @@
             document.getElementById('editModal').style.display = 'block';
         }
 
-        // 모달 닫기 (v5.0 동일)
+        // 모달 닫기
         function closeModal() {
             document.getElementById('editModal').style.display = 'none';
             editingIndex = -1;
         }
 
-        // 모달에서 수정된 정보 저장 (v5.0 동일)
+        // 모달에서 수정된 정보 저장
         function savePlayer() {
             if (editingIndex === -1) return;
 
             const tierSelect = document.getElementById('mTier');
-            const updatedRawTier = parseInt(tierSelect.value);
+            const updatedRawTier = parseInt(tierSelect.value, 10);
             const updatedCondition = parseFloat(document.getElementById('mCondition').value);
             const updatedIsOrder = document.getElementById('mOrder').checked;
+
+            if (isNaN(updatedRawTier) || isNaN(updatedCondition)) {
+                return alert("수정된 데이터가 올바르지 않습니다.");
+            }
 
             players[editingIndex] = {
                 ...players[editingIndex],
@@ -607,7 +641,7 @@
             saveAndRender();
         }
 
-        // 기본 유틸리티 기능 (v5.0 동일)
+        // 기본 유틸리티 기능
         function renderList() {
             const list = document.getElementById('playerList');
             document.getElementById('playerCount').innerText = `${players.length} / 10 명`;
@@ -617,6 +651,9 @@
                 const condIcon = COND_ICONS[String(p.condition)] || '';
                 const condBadgeClass = p.condition > 1.0 ? 'cond-best' : p.condition < 1.0 ? 'cond-tired' : '';
                 const condBadge = condBadgeClass ? `<span class="badge ${condBadgeClass}">${condIcon} ${p.condition * 100}%</span>` : '';
+
+                // 점수 안전 표시
+                const displayScore = isNaN(p.finalScore) ? "오류(0)" : p.finalScore;
 
                 list.innerHTML += `
                 <div class="player-card" onclick="openModal(${index})">
@@ -630,7 +667,7 @@
                             ${condBadge}
                             <span class="badge pos" style="background:#2980b9">${LANE_NAMES[p.mainPos]}</span>
                             ${p.subPos !== 'ALL' && p.subPos !== p.mainPos ? `<span class="badge pos" style="background:#888;">${LANE_NAMES[p.subPos]}</span>` : ''}
-                            <span style="font-size:0.75rem; color:#666; margin-left:auto;">전투력 ${p.finalScore}</span>
+                            <span style="font-size:0.75rem; color:#666; margin-left:auto;">전투력 ${displayScore}</span>
                         </div>
                     </div>
                     <span style="color:#e74c3c; cursor:pointer; padding:5px;" onclick="event.stopPropagation(); removePlayer(${index});">×</span>
@@ -642,29 +679,43 @@
         function resetAll() { if (confirm('모든 참가자 데이터를 삭제하고 초기화하시겠습니까?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
 
         function saveAndRender() {
-            localStorage.setItem('lol_civil_war_v6', JSON.stringify(players));
+            localStorage.setItem('lol_civil_war_v7', JSON.stringify(players));
             renderList();
         }
         function loadData() {
-            const data = localStorage.getItem('lol_civil_war_v6');
-            if (data) { players = JSON.parse(data); renderList(); }
+            const data = localStorage.getItem('lol_civil_war_v7');
+            if (data) {
+                players = JSON.parse(data);
+                // 로드 시 NaN 정화
+                players.forEach(p => {
+                    if (isNaN(p.finalScore)) p.finalScore = calculateFinalScore(p.rawTier, p.condition, p.isOrder);
+                });
+                renderList();
+            }
         }
 
-        // 밸런싱 로직 (v4.0 동일)
+        // 밸런싱 로직
         function calculateAndAssign() {
             if (players.length < 2) return alert("최소 2명 이상 필요합니다.");
 
-            let sorted = [...players].sort((a, b) => b.finalScore - a.finalScore);
-            if (Math.random() > 0.3) sorted.sort((a, b) => b.finalScore - a.finalScore || Math.random() - 0.5);
+            // NaN 안전 정렬
+            let sorted = [...players].sort((a, b) => {
+                const scoreA = isNaN(a.finalScore) ? 0 : a.finalScore;
+                const scoreB = isNaN(b.finalScore) ? 0 : b.finalScore;
+                return scoreB - scoreA;
+            });
+
+            if (Math.random() > 0.3) sorted.sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0) || Math.random() - 0.5);
 
             let blueTeam = [], redTeam = [], blueScore = 0, redScore = 0;
             let pool = [...sorted];
 
             pool.forEach(p => {
+                const pScore = isNaN(p.finalScore) ? 0 : p.finalScore;
                 if (blueScore <= redScore) {
-                    blueTeam.push(p); blueScore += p.finalScore;
+                    blueTeam.push(p); blueScore += pScore;
                 } else {
-                    redTeam.push(p); redScore += p.finalScore;
+                    redTeam.push(p); redScore += pScore;
                 }
             });
 
@@ -678,7 +729,7 @@
             setTimeout(() => document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
-        // 라인 배정 알고리즘 + 선호도 판정 추가
+        // 라인 배정 알고리즘
         function assignLanes(team) {
             if (team.length !== 5) return team.map((p, i) => ({ ...p, assignedLane: LANES[i] || 'NONE', isAuto: true, prefType: 'AUTO' }));
 
@@ -691,25 +742,20 @@
                     const lane = LANES[i];
                     if (p.mainPos === lane) score += 100;
                     else if (p.subPos === lane) score += 80;
-                    else if (p.mainPos === 'ALL') score += 90; // 랜덤 유저는 높은 점수로 배정 유도
+                    else if (p.mainPos === 'ALL') score += 90;
                     else if (p.subPos === 'ALL') score += 70;
                     else score -= 10;
                 });
                 if (score > maxScore) { maxScore = score; bestPerm = perm; }
             });
 
-            // 결과에 선호도 타입(prefType) 추가
             return bestPerm.map((p, idx) => {
                 const assignedLane = LANES[idx];
                 let prefType = 'AUTO';
 
-                if (p.mainPos === assignedLane) {
-                    prefType = 'MAIN';
-                } else if (p.subPos === assignedLane) {
-                    prefType = 'SUB';
-                } else if (p.mainPos === 'ALL' || p.subPos === 'ALL') {
-                    prefType = 'RANDOM'; // 랜덤 선택 유저는 별도 타입
-                }
+                if (p.mainPos === assignedLane) prefType = 'MAIN';
+                else if (p.subPos === assignedLane) prefType = 'SUB';
+                else if (p.mainPos === 'ALL' || p.subPos === 'ALL') prefType = 'RANDOM';
 
                 return { ...p, assignedLane, prefType };
             });
@@ -731,21 +777,15 @@
             el.innerHTML = '';
 
             team.forEach(p => {
-                let laneName = LANE_NAMES[p.assignedLane];
-                let laneClass = 'lane-' + p.assignedLane.toLowerCase();
+                let laneName = LANE_NAMES[p.assignedLane] || '대기';
+                let laneClass = p.assignedLane ? 'lane-' + p.assignedLane.toLowerCase() : '';
                 let condIcon = COND_ICONS[String(p.condition)] || '';
 
-                // 배정 선호도에 따른 배지 생성
                 let prefBadge;
-                if (p.prefType === 'MAIN') {
-                    prefBadge = '<span class="pref-badge main">[MAIN]</span>';
-                } else if (p.prefType === 'SUB') {
-                    prefBadge = '<span class="pref-badge sub">[SUB]</span>';
-                } else if (p.prefType === 'AUTO') {
-                    prefBadge = '<span class="pref-badge auto">[AUTO]</span>';
-                } else { // RANDOM
-                    prefBadge = '';
-                }
+                if (p.prefType === 'MAIN') prefBadge = '<span class="pref-badge main">[MAIN]</span>';
+                else if (p.prefType === 'SUB') prefBadge = '<span class="pref-badge sub">[SUB]</span>';
+                else if (p.prefType === 'AUTO') prefBadge = '<span class="pref-badge auto">[AUTO]</span>';
+                else prefBadge = '';
 
                 el.innerHTML += `
                 <div class="role-row">
@@ -758,12 +798,127 @@
                         </span>
                         <div class="p-desc">
                             ${p.tierName} | ${LANE_NAMES[p.mainPos]} ${p.subPos !== 'ALL' ? `/ ${LANE_NAMES[p.subPos]}` : ''}
-                            <span class="calc-score">전투력: ${p.finalScore}</span>
+                            <span class="calc-score">전투력: ${isNaN(p.finalScore) ? '0' : p.finalScore}</span>
                         </div>
                     </div>
                 </div>
             `;
             });
+        }
+
+        // --- [수정된] 시리얼 코드 시스템 (강제 복사 기능 포함) ---
+
+        // 1. 내 정보를 시리얼 코드로 변환하여 클립보드에 복사
+        function exportPlayerCode() {
+            const name = document.getElementById('pName').value.trim();
+            if (!name) return alert("최소한 이름은 입력해야 코드를 만들 수 있습니다.");
+
+            const tierVal = document.getElementById('pTier').value;
+            const condVal = document.getElementById('pCondition').value;
+            const isOrder = document.getElementById('pOrder').checked;
+            const mainPos = document.getElementById('pMainPos').value;
+            const subPos = document.getElementById('pSubPos').value;
+
+            const dataObj = { n: name, t: tierVal, c: condVal, o: isOrder, m: mainPos, s: subPos };
+
+            try {
+                // 한글 깨짐 방지 인코딩
+                const jsonStr = JSON.stringify(dataObj);
+                const base64Code = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+                    return String.fromCharCode('0x' + p1);
+                }));
+
+                // [핵심] 복사 시도 (최신 방식 -> 실패 시 구형 방식)
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(base64Code)
+                        .then(() => alert(`[${name}] 님의 정보 코드가 복사되었습니다!\n\n호스트에게 붙여넣기(Ctrl+V)해서 전달하세요.`))
+                        .catch(() => copyFallback(base64Code, name));
+                } else {
+                    copyFallback(base64Code, name);
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert("코드 생성 중 오류가 발생했습니다.");
+            }
+        }
+
+        // 2. 외부 코드를 해석하여 리스트에 즉시 추가
+        function importPlayerCode() {
+            const inputEl = document.getElementById('importCode');
+            const code = inputEl.value.trim();
+
+            if (!code) return alert("코드를 입력해주세요.");
+
+            try {
+                // 디코딩 (한글 처리 포함)
+                const jsonStr = decodeURIComponent(Array.prototype.map.call(atob(code), function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const data = JSON.parse(jsonStr);
+
+                if (!data.n || !data.t) throw new Error("유효하지 않은 데이터입니다.");
+                if (players.length >= 10) return alert("이미 10명이 꽉 찼습니다.");
+
+                // 티어 이름 찾기
+                const tierSelect = document.getElementById('pTier');
+                let tierName = "Unknown";
+                for (let i = 0; i < tierSelect.options.length; i++) {
+                    if (tierSelect.options[i].value == data.t) {
+                        tierName = tierSelect.options[i].text;
+                        break;
+                    }
+                }
+
+                const rawTier = parseInt(data.t, 10);
+                const condition = parseFloat(data.c);
+
+                players.push({
+                    id: Date.now(),
+                    name: data.n,
+                    rawTier: rawTier,
+                    tierName: tierName,
+                    condition: condition,
+                    isOrder: data.o,
+                    mainPos: data.m,
+                    subPos: data.s,
+                    finalScore: calculateFinalScore(rawTier, condition, data.o)
+                });
+
+                inputEl.value = '';
+                saveAndRender();
+                console.log(`${data.n} 추가 완료`);
+
+            } catch (e) {
+                console.error(e);
+                alert("올바르지 않은 코드입니다. 다시 확인해주세요.");
+            }
+        }
+
+        function copyFallback(text, name) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert(`[${name}] 님의 정보 코드가 복사되었습니다! (구형 방식)`);
+                } else {
+                    prompt("이 코드를 직접 복사(Ctrl+C)하세요:", text);
+                }
+            } catch (err) {
+                prompt("이 코드를 직접 복사(Ctrl+C)하세요:", text);
+            }
+
+            document.body.removeChild(textArea);
         }
     </script>
 
