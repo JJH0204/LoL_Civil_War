@@ -476,6 +476,12 @@
                 <div id="redList"></div>
             </div>
         </div>
+        <div id="shareSection" style="display:none; width:100%; max-width:800px; margin-top:20px; gap:10px;">
+            <button onclick="copyResultText()"
+                style="background: #5865F2; color: white; flex:1; padding: 15px; border:1px solid #4752c4;">
+                📋 디스코드용 텍스트 복사
+            </button>
+        </div>
     </div>
 
     <div id="editModal" class="modal">
@@ -727,6 +733,8 @@
             renderResult('redList', 'redAvg', redAssigned, redScore);
 
             setTimeout(() => document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' }), 100);
+
+            document.getElementById('shareSection').style.display = 'flex';
         }
 
         // 라인 배정 알고리즘
@@ -806,9 +814,6 @@
             });
         }
 
-        // --- [수정된] 시리얼 코드 시스템 (강제 복사 기능 포함) ---
-
-        // 1. 내 정보를 시리얼 코드로 변환하여 클립보드에 복사
         function exportPlayerCode() {
             const name = document.getElementById('pName').value.trim();
             if (!name) return alert("최소한 이름은 입력해야 코드를 만들 수 있습니다.");
@@ -919,6 +924,49 @@
             }
 
             document.body.removeChild(textArea);
+        }
+
+        // --- [NEW] 결과 텍스트 복사 기능 ---
+        function copyResultText() {
+            const blueTotal = document.getElementById('blueAvg').innerText;
+            const redTotal = document.getElementById('redAvg').innerText;
+
+            // 팀 데이터 가져오기 (DOM에서 긁어오는 대신 players 배열을 다시 계산하거나, DOM 텍스트를 파싱)
+            // 화면에 렌더링된 내용을 기반으로 텍스트 생성
+            let text = "```asciidoc\n"; // 디스코드 코드 블록 시작
+            text += "= ⚔️ LoL Civil War 결과 ⚔️ =\n\n";
+
+            text += `[🔵 BLUE TEAM] (전투력: ${blueTotal})\n`;
+            text += getTeamText('blueList');
+
+            text += `\n[🔴 RED TEAM] (전투력: ${redTotal})\n`;
+            text += getTeamText('redList');
+
+            text += "```"; // 코드 블록 끝
+
+            // 클립보드 복사 (Fallback 사용)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => alert("디스코드용 텍스트가 복사되었습니다!")).catch(() => copyFallback(text, "결과"));
+            } else {
+                copyFallback(text, "결과");
+            }
+        }
+
+        function getTeamText(listId) {
+            const list = document.getElementById(listId);
+            let rows = list.getElementsByClassName('role-row');
+            let str = "";
+
+            for (let row of rows) {
+                // DOM 구조에 따라 텍스트 추출
+                let lane = row.querySelector('.role-icon div').innerText;
+                let namePart = row.querySelector('.p-name').innerText.replace(/\n/g, ' ').trim(); // 이름 + 뱃지 텍스트
+                let descPart = row.querySelector('.p-desc').innerText.trim();
+
+                // 보기 좋게 포맷팅
+                str += `${lane.padEnd(3, ' ')} :: ${namePart} (${descPart})\n`;
+            }
+            return str;
         }
     </script>
 
