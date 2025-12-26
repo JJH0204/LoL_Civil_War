@@ -4,377 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LoL Civil War</title>
-    <style>
-        :root {
-            --bg: #121212;
-            --text: #e0e0e0;
-            --accent: #0ac8b9;
-            --card: #1e1e1e;
-            --blue: #2980b9;
-            --red: #c0392b;
-            --gold: #f1c40f;
-        }
+    <title>LoL Civil War v20.4</title>
+    <link rel="stylesheet" href="style.css">
 
-        body {
-            font-family: 'Apple SD Gothic Neo', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    <script src="championList.js" onerror="console.warn('championList.js 로드 실패. 기본값 사용.')"></script>
 
-        h1 {
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-
-        .sub-title {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 900px;
-            width: 100%;
-        }
-
-        .input-wrapper {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        input,
-        select {
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #2b2b2b;
-            color: white;
-            flex: 1;
-            min-width: 80px;
-            font-size: 0.95rem;
-        }
-
-        .label {
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-bottom: 5px;
-            display: block;
-            font-weight: bold;
-        }
-
-        button {
-            padding: 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .btn-add {
-            background: var(--accent);
-            color: #000;
-            width: 100%;
-        }
-
-        .btn-calc {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            color: white;
-            width: 100%;
-            font-size: 1.2rem;
-            margin-top: 20px;
-            padding: 15px;
-        }
-
-        .player-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 10px;
-        }
-
-        .player-card {
-            background: var(--card);
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid #555;
-        }
-
-        .player-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .badges {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-top: 5px;
-        }
-
-        .badge {
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .badge.tier {
-            background: #333;
-            border: 1px solid #555;
-        }
-
-        .badge.avoid {
-            background: #c0392b;
-            color: #fff;
-        }
-
-        .result-area {
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        @media (min-width: 750px) {
-            .result-area {
-                flex-direction: row;
-            }
-        }
-
-        .team {
-            flex: 1;
-            background: var(--card);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .team-header {
-            padding: 20px;
-            text-align: center;
-        }
-
-        .team.blue .team-header {
-            border-bottom: 3px solid var(--blue);
-            background: linear-gradient(to right, rgba(41, 128, 185, 0.2), transparent);
-        }
-
-        .team.red .team-header {
-            border-bottom: 3px solid var(--red);
-            background: linear-gradient(to right, rgba(192, 57, 43, 0.2), transparent);
-        }
-
-        .role-row {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid #333;
-            min-height: 60px;
-        }
-
-        .role-icon {
-            width: 40px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #777;
-            text-align: center;
-            margin-right: 15px;
-        }
-
-        .lane-top {
-            color: #e67e22;
-        }
-
-        .lane-jug {
-            color: #2ecc71;
-        }
-
-        .lane-mid {
-            color: #9b59b6;
-        }
-
-        .lane-adc {
-            color: #e74c3c;
-        }
-
-        .lane-sup {
-            color: #f1c40f;
-        }
-
-        .pref-badge {
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 2px 5px;
-            border-radius: 3px;
-            margin-left: 5px;
-        }
-
-        .pref-1st {
-            background: #27ae60;
-            color: white;
-        }
-
-        .pref-2nd {
-            background: #f39c12;
-            color: white;
-        }
-
-        .pref-main {
-            background: #2980b9;
-            color: white;
-        }
-
-        .pref-auto {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .pref-force {
-            background: #555;
-            color: #aaa;
-            text-decoration: line-through;
-        }
-
-        .ace-badge {
-            background: linear-gradient(45deg, #f1c40f, #f39c12);
-            color: #000;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 5px;
-            box-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
-            animation: shine 2s infinite;
-        }
-
-        @keyframes shine {
-            0% {
-                opacity: 0.8;
-            }
-
-            50% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0.8;
-            }
-        }
-
-        .gap-warning {
-            border: 1px solid #c0392b;
-            color: #e74c3c;
-            font-size: 0.7rem;
-            padding: 1px 4px;
-            border-radius: 3px;
-            margin-left: 5px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        .modal-content {
-            background-color: var(--card);
-            margin: 10% auto;
-            padding: 30px;
-            border: 1px solid #444;
-            width: 90%;
-            max-width: 550px;
-            border-radius: 15px;
-        }
-    </style>
+    <script src="script.js" defer></script>
 </head>
 
 <body>
 
     <div class="container">
-        <h1>⚔️ LoL Civil War</h1>
-        <div class="sub-title"> </div>
-
-        <div class="input-wrapper">
-            <div
-                style="background: #252525; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed #555; display:flex; gap:10px; align-items: center;">
-                <input type="text" id="importCode" placeholder="공유 코드를 여기에 붙여넣기..."
-                    style="background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
-                <button onclick="importPlayerCode()"
-                    style="background: #333; color: white; width: 80px; border:1px solid #555; padding: 10px;">📥
-                    추가</button>
-            </div>
-
-            <div class="input-row">
-                <div style="flex: 2;">
-                    <span class="label">이름</span>
-                    <input type="text" id="pName"
-                        onkeypress="if(event.keyCode==13) document.getElementById('pTier').focus()">
-                </div>
-                <div style="flex: 1.2;">
-                    <span class="label">티어</span>
-                    <select id="pTier"></select>
-                </div>
-                <div style="flex: 0.8;">
-                    <span class="label">단계</span>
-                    <select id="pDiv">
-                        <option value="4">4</option>
-                        <option value="3">3</option>
-                        <option value="2">2</option>
-                        <option value="1">1</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="input-row">
-                <div style="flex: 1;"><span class="label" style="color:#0ac8b9">1지망</span><select
-                        id="pTargetPos"></select></div>
-                <div style="flex: 1;"><span class="label" style="color:#f39c12">2지망</span><select id="pSubPos"></select>
-                </div>
-                <div style="flex: 1;"><span class="label" style="color:#888">주 라인</span><select id="pMainPos"></select>
-                </div>
-                <div style="flex: 1;"><span class="label" style="color:#c0392b">기피</span><select
-                        id="pAvoidPos"></select></div>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn-add" onclick="addPlayer()" style="flex:2;">참가자 등록 (+)</button>
-                <button onclick="exportPlayerCode()"
-                    style="flex:1; background: #444; color: #ccc; border: 1px solid #555;">📤 공유코드</button>
-            </div>
+        <div class="top-bar">
+            <h1>⚔️ LoL Civil War</h1>
+            <button class="btn-icon" onclick="openSettings()">⚙️ 설정</button>
         </div>
 
-        <div class="header-area">
-            <div id="playerCount" style="color: #888;">0 / 10 명</div>
-            <button style="background:none; border:1px solid #555; color:#888; padding:5px 10px;"
-                onclick="resetAll()">초기화</button>
+        <div class="top-bar">
+            <div class="import-box">
+                <input type="text" id="importCode" placeholder="공유 코드 붙여넣기...">
+                <button class="btn-icon" onclick="importPlayerCode()">📥 추가</button>
+            </div>
+            <div id="playerCount" style="color: #888; font-size: 0.9rem;">0 / 10 명</div>
+            <!-- <button class="btn-icon" style="background:none; border:1px solid #555; color:#888;"
+                onclick="resetAll()">🗑️</button> -->
         </div>
+
+        <button class="btn-main-add" onclick="openModal('new')">
+            참가자 추가 / 코드 생성
+        </button>
+
         <div class="player-list" id="playerList"></div>
 
         <button class="btn-calc" onclick="calculateAndAssign()">⚖️ 정밀 밸런싱 시작</button>
@@ -383,427 +42,134 @@
             <div class="team blue">
                 <div class="team-header">
                     <h3 style="color: #5dade2;">BLUE TEAM</h3>
-                    <!-- <div style="font-size:0.9rem; color:#888; margin-top:5px;">밸런스 최적화 완료</div> -->
+                    <div class="score-display" id="blueScoreDisp"></div>
                 </div>
                 <div id="blueList"></div>
             </div>
             <div class="team red">
                 <div class="team-header">
                     <h3 style="color: #ec7063;">RED TEAM</h3>
-                    <!-- <div style="font-size:0.9rem; color:#888; margin-top:5px;">밸런스 최적화 완료</div> -->
+                    <div class="score-display" id="redScoreDisp"></div>
                 </div>
                 <div id="redList"></div>
             </div>
         </div>
 
         <div id="shareSection" style="display:none; width:100%; margin-top:20px;">
-            <button onclick="copyResultText()"
-                style="background: #5865F2; color: white; width:100%; padding: 15px; border-radius: 6px; border:none; font-weight:bold;">📋
-                디스코드용 텍스트 복사</button>
+            <button class="btn-icon"
+                style="background: #5865F2; width:100%; border:none; padding:15px; font-weight:bold;"
+                onclick="copyResultText()">📋 디스코드용 텍스트 복사</button>
         </div>
     </div>
 
-    <div id="editModal" class="modal">
+    <div class="release-info">Release v20.4</div>
+
+    <div id="playerModal" class="modal">
         <div class="modal-content">
-            <span style="float:right; cursor:pointer; font-size:24px;" onclick="closeModal()">×</span>
-            <h2 style="margin-top:0;">정보 수정</h2>
+            <span class="close-btn" onclick="closeModal('playerModal')">&times;</span>
+            <h2 id="modalTitle">참가자 등록</h2>
+
             <div class="input-row">
-                <div style="flex:2"><span class="label">이름</span><input id="mName"></div>
-                <div style="flex:1"><span class="label">티어</span><select id="mTier"></select></div>
-                <div style="flex:0.8"><span class="label">단계</span><select id="mDiv">
-                        <option value="4">4</option>
-                        <option value="3">3</option>
-                        <option value="2">2</option>
-                        <option value="1">1</option>
-                    </select></div>
-            </div>
-            <div class="input-row">
-                <div style="flex:1"><span class="label">1지망</span><select id="mTargetPos"></select></div>
-                <div style="flex:1"><span class="label">2지망</span><select id="mSubPos"></select></div>
-            </div>
-            <div class="input-row">
-                <div style="flex:1"><span class="label">주 라인</span><select id="mMainPos"></select></div>
-                <div style="flex:1"><span class="label" style="color:#c0392b">기피</span><select id="mAvoidPos"></select>
+                <div style="flex:2">
+                    <span class="label">소환사명</span>
+                    <input type="text" id="pName" placeholder="이름">
+                </div>
+                <div style="flex:1.5">
+                    <span class="label">티어 (통합)</span>
+                    <select id="pTierCombined"></select>
                 </div>
             </div>
-            <button class="btn-add" onclick="savePlayer()">저장</button>
-        </div>
-    </div>
 
-    <script>
-        let players = [];
-        let editingIndex = -1;
-        const LANES = ['TOP', 'JUG', 'MID', 'ADC', 'SUP'];
-        const LANE_NAMES = { 'TOP': '탑', 'JUG': '정글', 'MID': '미드', 'ADC': '원딜', 'SUP': '서폿', 'ALL': '랜덤', 'NONE': '없음' };
-        const TIER_OPTIONS = [
-            { v: "100", n: "아이언" }, { v: "300", n: "브론즈" }, { v: "500", n: "실버" },
-            { v: "700", n: "골드" }, { v: "900", n: "플래티넘" }, { v: "1100", n: "에메랄드" },
-            { v: "1300", n: "다이아" }, { v: "1500", n: "마스터+" }
-        ];
+            <div class="input-row">
+                <div style="flex:1">
+                    <span class="label" style="color:#0ac8b9">1지망</span>
+                    <select id="pTargetPos"></select>
+                </div>
+                <div style="flex:1">
+                    <span class="label" style="color:#f39c12">2지망</span>
+                    <select id="pSubPos"></select>
+                </div>
+            </div>
 
-        window.onload = function () { loadData(); initSelects(); };
+            <div class="input-row">
+                <div style="flex:1">
+                    <span class="label">본캐 주라인</span>
+                    <select id="pMainPos"></select>
+                </div>
+                <div style="flex:1">
+                    <span class="label" style="color:#c0392b">기피 라인</span>
+                    <select id="pAvoidPos"></select>
+                </div>
+            </div>
 
-        function initSelects() {
-            const fill = (id, opts) => { const el = document.getElementById(id); el.innerHTML = ''; opts.forEach(o => el.innerHTML += `<option value="${o.v}">${o.n}</option>`) };
-            fill('pTier', TIER_OPTIONS); fill('mTier', TIER_OPTIONS);
-
-            const lOpts = LANES.map(l => ({ v: l, n: LANE_NAMES[l] })); lOpts.push({ v: 'ALL', n: '🎲 랜덤' });
-            ['pTargetPos', 'pSubPos', 'pMainPos', 'mTargetPos', 'mSubPos', 'mMainPos'].forEach(id => {
-                const el = document.getElementById(id); el.innerHTML = '';
-                lOpts.forEach(o => el.innerHTML += `<option value="${o.v}">${o.n}</option>`);
-            });
-
-            const avoidOpts = [{ v: 'NONE', n: '없음' }, ...LANES.map(l => ({ v: l, n: LANE_NAMES[l] }))];
-            ['pAvoidPos', 'mAvoidPos'].forEach(id => {
-                const el = document.getElementById(id); el.innerHTML = '';
-                avoidOpts.forEach(o => el.innerHTML += `<option value="${o.v}">${o.n}</option>`);
-            });
-        }
-
-        // 티어 + 단계 점수만 계산 (활동량 삭제)
-        function calcBaseScore(tier, div) {
-            const base = parseInt(tier) || 0;
-            const divisionBonus = (4 - (parseInt(div) || 4)) * 25;
-            return base + divisionBonus;
-        }
-
-        function addPlayer() {
-            const name = document.getElementById('pName').value.trim();
-            if (!name) return alert("이름 필수");
-            if (players.length >= 10) return alert("10명 초과");
-
-            const tier = document.getElementById('pTier').value;
-            const div = document.getElementById('pDiv').value;
-
-            players.push({
-                id: Date.now(), name,
-                rawTier: parseInt(tier), division: parseInt(div),
-                tierName: document.getElementById('pTier').selectedOptions[0].text,
-                targetPos: document.getElementById('pTargetPos').value,
-                subPos: document.getElementById('pSubPos').value,
-                mainPos: document.getElementById('pMainPos').value,
-                avoidPos: document.getElementById('pAvoidPos').value,
-                baseScore: calcBaseScore(tier, div)
-            });
-            document.getElementById('pName').value = ''; saveAndRender();
-        }
-
-        function savePlayer() {
-            if (editingIndex < 0) return;
-            const tier = document.getElementById('mTier').value;
-            const div = document.getElementById('mDiv').value;
-            players[editingIndex] = {
-                ...players[editingIndex],
-                name: document.getElementById('mName').value,
-                rawTier: parseInt(tier), division: parseInt(div),
-                tierName: document.getElementById('mTier').selectedOptions[0].text,
-                targetPos: document.getElementById('mTargetPos').value,
-                subPos: document.getElementById('mSubPos').value,
-                mainPos: document.getElementById('mMainPos').value,
-                avoidPos: document.getElementById('mAvoidPos').value,
-                baseScore: calcBaseScore(tier, div)
-            };
-            closeModal(); saveAndRender();
-        }
-
-        // --- [V18.0] 스네이크 방식 + 라운드별 점수 재계산 ---
-        function calculateAndAssign() {
-            if (players.length < 2) return alert("최소 2명");
-
-            let blueSlots = {}; LANES.forEach(l => blueSlots[l] = null);
-            let redSlots = {}; LANES.forEach(l => redSlots[l] = null);
-            let blueTeam = [], redTeam = [];
-
-            // 1. 초기 1지망 배정을 위한 정렬 (기본점수)
-            let sorted = [...players].sort((a, b) => {
-                let diff = b.baseScore - a.baseScore;
-                return diff !== 0 ? diff : a.name.localeCompare(b.name);
-            });
-
-            let unassigned = [...sorted];
-
-            // --- ROUND 1: 1지망 (가중치 1.0) ---
-            // 1지망은 '기본 점수'대로 높은 사람부터 순차 배정
-            unassigned = attemptAssign(unassigned, '1ST', blueSlots, redSlots, blueTeam, redTeam, 1.0);
-
-            // --- ROUND 2: 2지망 (가중치 0.9 + 재정렬) ---
-            // 남은 인원의 점수를 0.9배 한 뒤 다시 정렬
-            unassigned = sortForNextRound(unassigned, 0.9);
-            unassigned = attemptAssign(unassigned, '2ND', blueSlots, redSlots, blueTeam, redTeam, 0.9);
-
-            // --- ROUND 3: 주 라인 구제 (가중치 0.95 + 재정렬) ---
-            unassigned = sortForNextRound(unassigned, 0.95);
-            unassigned = attemptAssign(unassigned, 'MAIN', blueSlots, redSlots, blueTeam, redTeam, 0.95);
-
-            // --- ROUND 4: 오토필 (가중치 0.7 + 재정렬 + 스마트매칭) ---
-            unassigned = sortForNextRound(unassigned, 0.7);
-            unassigned.forEach(p => {
-                let candidates = [];
-                let myPower = Math.round(p.baseScore * 0.7);
-
-                // 기피라인 제외하고 스캔
-                if (blueTeam.length < 5) scanSlots(blueSlots, 'BLUE', candidates, myPower, redSlots, p.avoidPos);
-                if (redTeam.length < 5) scanSlots(redSlots, 'RED', candidates, myPower, blueSlots, p.avoidPos);
-
-                candidates.sort((a, b) => a.gap - b.gap);
-
-                if (candidates.length > 0) {
-                    let best = candidates[0];
-                    let targetSlots = (best.team === 'BLUE') ? blueSlots : redSlots;
-                    let targetTeam = (best.team === 'BLUE') ? blueTeam : redTeam;
-                    assignTo(targetSlots, targetTeam, best.lane, p, 'AUTO', 0.7);
-                } else {
-                    forceAssign(p, blueSlots, redSlots, blueTeam, redTeam);
-                }
-            });
-
-            // 결과 렌더링
-            let blueScore = calcTeamScore(blueTeam);
-            let redScore = calcTeamScore(redTeam);
-            findAce(blueSlots); findAce(redSlots);
-            analyzeGap(blueSlots, redSlots);
-
-            const rArea = document.getElementById('resultArea');
-            rArea.style.display = 'flex';
-            renderTeamResult('blueList', 'blueAvg', blueSlots, blueScore);
-            renderTeamResult('redList', 'redAvg', redSlots, redScore);
-
-            setTimeout(() => rArea.scrollIntoView({ behavior: 'smooth' }), 100);
-            document.getElementById('shareSection').style.display = 'flex';
-        }
-
-        // 다음 라운드를 위해 임시 점수로 재정렬하는 함수
-        function sortForNextRound(queue, ratio) {
-            return queue.map(p => ({ ...p, tempScore: Math.round(p.baseScore * ratio) }))
-                .sort((a, b) => b.tempScore - a.tempScore || a.name.localeCompare(b.name));
-        }
-
-        // 배정 시도 함수 (스네이크/Greedy 로직 적용)
-        function attemptAssign(queue, mode, bSlots, rSlots, bTeam, rTeam, ratio) {
-            let nextQueue = [];
-
-            queue.forEach(p => {
-                // 현재 모드에 부합하는 타겟 라인 확인
-                let isTarget = false;
-                let targetPos = null;
-                let typeCode = mode;
-
-                if (mode === '1ST') {
-                    if (p.targetPos !== 'ALL') { isTarget = true; targetPos = p.targetPos; }
-                    else { isTarget = true; targetPos = 'ALL'; typeCode = '1ST_RAND'; } // 1지망 랜덤
-                } else if (mode === '2ND') {
-                    if (p.subPos !== 'ALL') { isTarget = true; targetPos = p.subPos; }
-                    else { isTarget = true; targetPos = 'ALL'; typeCode = '2ND_RAND'; } // 2지망 랜덤
-                } else if (mode === 'MAIN') {
-                    if (p.mainPos !== 'ALL') { isTarget = true; targetPos = p.mainPos; }
-                }
-
-                if (!isTarget) {
-                    nextQueue.push(p);
-                    return;
-                }
-
-                let assigned = false;
-                let bScore = calcTeamScore(bTeam);
-                let rScore = calcTeamScore(rTeam);
-
-                // [Greedy] 점수가 낮은 팀을 우선 배정 (이게 결국 스네이크 방식이 됨)
-                let weakTeamIsBlue;
-                if (bTeam.length < rTeam.length) weakTeamIsBlue = true;
-                else if (rTeam.length < bTeam.length) weakTeamIsBlue = false;
-                else weakTeamIsBlue = (bScore <= rScore);
-
-                let mySlots = weakTeamIsBlue ? bSlots : rSlots;
-                let myTeam = weakTeamIsBlue ? bTeam : rTeam;
-                let otherSlots = weakTeamIsBlue ? rSlots : bSlots;
-                let otherTeam = weakTeamIsBlue ? rTeam : bTeam;
-
-                // 1. 약한 팀 시도
-                if (checkSafe(mySlots, targetPos, p.avoidPos)) {
-                    assignTo(mySlots, myTeam, targetPos, p, typeCode, ratio);
-                    assigned = true;
-                }
-                // 2. 강한 팀 시도 (상대팀에 자리가 있고, 인원이 남을 때)
-                else if (otherTeam.length < 5 && checkSafe(otherSlots, targetPos, p.avoidPos)) {
-                    assignTo(otherSlots, otherTeam, targetPos, p, typeCode, ratio);
-                    assigned = true;
-                }
-
-                if (!assigned) nextQueue.push(p);
-            });
-            return nextQueue;
-        }
-
-        function calcTeamScore(team) { return team.reduce((sum, p) => sum + (p.finalScore || 0), 0); }
-
-        function forceAssign(p, bSlots, rSlots, bTeam, rTeam) {
-            let candidates = [];
-            let myPower = Math.round(p.baseScore * 0.5);
-            if (bTeam.length < 5) scanSlots(bSlots, 'BLUE', candidates, myPower, rSlots, 'IGNORE');
-            if (rTeam.length < 5) scanSlots(rSlots, 'RED', candidates, myPower, bSlots, 'IGNORE');
-            candidates.sort((a, b) => a.gap - b.gap);
-
-            if (candidates.length > 0) {
-                let best = candidates[0];
-                let targetSlots = (best.team === 'BLUE') ? bSlots : rSlots;
-                let targetTeam = (best.team === 'BLUE') ? bTeam : rTeam;
-                assignTo(targetSlots, targetTeam, best.lane, p, 'FORCE', 0.5);
-            }
-        }
-
-        function scanSlots(slots, teamName, candidates, myPower, enemySlots, avoidPos) {
-            LANES.forEach(lane => {
-                if (slots[lane] === null && (avoidPos === 'IGNORE' || lane !== avoidPos)) {
-                    let enemy = enemySlots[lane];
-                    let gap = 5000;
-                    if (enemy) gap = Math.abs(myPower - enemy.finalScore);
-                    candidates.push({ team: teamName, lane: lane, gap: gap });
-                }
-            });
-        }
-
-        function checkSafe(slots, pos, avoidPos) {
-            if (pos === 'ALL') return LANES.some(l => slots[l] === null && l !== avoidPos);
-            if (pos === avoidPos) return false;
-            return slots[pos] === null;
-        }
-
-        function assignTo(slots, teamList, pos, p, type, ratio) {
-            let lane = pos;
-            if (pos === 'ALL' || type.includes('RAND') || type === 'AUTO' || type === 'FORCE') {
-                lane = LANES.find(l => slots[l] === null && (type === 'FORCE' ? true : l !== p.avoidPos));
-            }
-            if (!lane) return;
-
-            p.finalScore = Math.round(p.baseScore * ratio);
-            p.isUnderdog = false; p.isAce = false;
-            slots[lane] = { ...p, assignType: type, assignedLane: lane };
-            teamList.push(p);
-        }
-
-        function findAce(slots) {
-            let bestP = null, maxScore = -1;
-            LANES.forEach(l => {
-                const p = slots[l];
-                if (!p) return;
-                // 활동량 삭제됨 -> 조건: 1지망/2지망/주 라인 배정자 중 최고점
-                if (['1ST', '1ST_RAND', '2ND', '2ND_RAND', 'MAIN'].includes(p.assignType) && p.mainPos === p.assignedLane) {
-                    if (p.finalScore > maxScore) { maxScore = p.finalScore; bestP = p; }
-                }
-            });
-            if (bestP) bestP.isAce = true;
-        }
-
-        function analyzeGap(bSlots, rSlots) {
-            LANES.forEach(lane => {
-                const bp = bSlots[lane], rp = rSlots[lane];
-                if (bp && rp && Math.abs(bp.finalScore - rp.finalScore) >= 350) {
-                    if (bp.finalScore < rp.finalScore) bp.isUnderdog = true; else rp.isUnderdog = true;
-                }
-            });
-        }
-
-        function renderTeamResult(listId, scoreId, slots, total) {
-            const el = document.getElementById(listId);
-            el.innerHTML = '';
-            LANES.forEach(lane => {
-                const p = slots[lane];
-                let laneClass = 'lane-' + lane.toLowerCase();
-                if (p) {
-                    let badge = '';
-                    if (p.assignType === '1ST') badge = '<span class="pref-badge pref-1st">1지망</span>';
-                    else if (p.assignType === '1ST_RAND') badge = '<span class="pref-badge pref-1st">1지망(랜덤)</span>';
-                    else if (p.assignType === '2ND') badge = '<span class="pref-badge pref-2nd">2지망</span>';
-                    else if (p.assignType === '2ND_RAND') badge = '<span class="pref-badge pref-2nd">2지망(랜덤)</span>';
-                    else if (p.assignType === 'MAIN') badge = '<span class="pref-badge pref-main">주 라인</span>';
-                    else if (p.assignType === 'FORCE') badge = '<span class="pref-badge pref-force">강제</span>';
-                    else badge = '<span class="pref-badge pref-auto">오토필</span>';
-
-                    if (p.isUnderdog) badge += ` <span class="pref-badge gap-warning">⚠️ 열세</span>`;
-                    if (p.isAce) badge += ` <span class="ace-badge">👑 ACE</span>`;
-
-                    el.innerHTML += `
-                <div class="role-row">
-                    <div class="role-icon ${laneClass}"><div>${LANE_NAMES[lane]}</div></div>
-                    <div style="flex:1;">
-                        <span class="player-name">${p.name} ${badge}</span>
-                        <div style="font-size:0.8rem; color:#888;">
-                            ${p.tierName} ${p.division} (${LANE_NAMES[p.targetPos]})
+            <div class="input-row" style="align-items: flex-start;">
+                <div id="champSelectionArea" style="flex:1;">
+                    <span class="label">선호 챔피언 (최대 10개)</span>
+                    <div class="champ-select-box" onclick="openChampModal()">
+                        <div id="selectedChampPreview" style="display:flex; gap:5px; flex-wrap:wrap; min-height:24px;">
+                            <span style="color:#666; font-size:0.8rem; line-height:24px;">클릭하여 선택...</span>
                         </div>
                     </div>
-                </div>`;
-                } else {
-                    el.innerHTML += `<div class="role-row" style="opacity:0.3;"><div class="role-icon ${laneClass}"><div>${LANE_NAMES[lane]}</div></div><div style="flex:1;"><span>(비어있음)</span></div></div>`;
-                }
-            });
-        }
-
-        function renderList() {
-            const list = document.getElementById('playerList');
-            document.getElementById('playerCount').innerText = `${players.length} / 10 명`;
-            list.innerHTML = '';
-            players.forEach((p, i) => {
-                const avoidTxt = p.avoidPos !== 'NONE' ? `<span class="badge avoid">🚫 ${LANE_NAMES[p.avoidPos]}</span>` : '';
-                list.innerHTML += `
-            <div class="player-card" onclick="openModal(${i})">
-                <div class="player-info">
-                    <span class="player-name">${p.name}</span>
-                    <div class="badges">
-                        <span class="badge tier">${p.tierName} ${p.division}</span>
-                        <span class="badge" style="background:#27ae60">1: ${LANE_NAMES[p.targetPos]}</span>
-                        ${avoidTxt}
-                    </div>
                 </div>
-                <span style="color:#e74c3c; padding:5px;" onclick="event.stopPropagation(); removePlayer(${i})">×</span>
-            </div>`;
-            });
-        }
-        function removePlayer(i) { players.splice(i, 1); saveAndRender(); }
-        function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
-        function saveAndRender() { localStorage.setItem('lol_cw_v18', JSON.stringify(players)); renderList(); }
-        function loadData() { const d = localStorage.getItem('lol_cw_v18'); if (d) { players = JSON.parse(d); renderList(); } }
-        function openModal(i) {
-            editingIndex = i; const p = players[i];
-            document.getElementById('mName').value = p.name; document.getElementById('mTier').value = p.rawTier; document.getElementById('mDiv').value = p.division || 4;
-            document.getElementById('mTargetPos').value = p.targetPos; document.getElementById('mSubPos').value = p.subPos; document.getElementById('mMainPos').value = p.mainPos;
-            document.getElementById('mAvoidPos').value = p.avoidPos || 'NONE';
-            document.getElementById('editModal').style.display = 'block';
-        }
-        function closeModal() { document.getElementById('editModal').style.display = 'none'; editingIndex = -1; }
-        function exportPlayerCode() {
-            const n = document.getElementById('pName').value; if (!n) return alert('이름');
-            const d = {
-                n, t: document.getElementById('pTier').value, d: document.getElementById('pDiv').value,
-                p1: document.getElementById('pTargetPos').value, p2: document.getElementById('pSubPos').value, pm: document.getElementById('pMainPos').value,
-                av: document.getElementById('pAvoidPos').value
-            };
-            const code = btoa(encodeURIComponent(JSON.stringify(d)).replace(/%([0-9A-F]{2})/g, (m, p) => String.fromCharCode('0x' + p)));
-            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(code).then(() => alert('복사됨')); else prompt("코드:", code);
-        }
-        function importPlayerCode() {
-            const c = document.getElementById('importCode').value.trim(); if (!c) return;
-            try {
-                const d = JSON.parse(decodeURIComponent(Array.prototype.map.call(atob(c), x => '%' + ('00' + x.charCodeAt(0).toString(16)).slice(-2)).join('')));
-                players.push({
-                    id: Date.now(), name: d.n, rawTier: parseInt(d.t), division: parseInt(d.d) || 4,
-                    tierName: 'Imported', actName: 'Imported', targetPos: d.p1, subPos: d.p2, mainPos: d.pm, avoidPos: d.av || 'NONE', baseScore: calcBaseScore(d.t, d.d)
-                });
-                document.getElementById('importCode').value = ''; saveAndRender(); loadData();
-            } catch (e) { alert('코드 오류'); }
-        }
-        function copyResultText() {
-            const getTxt = (id) => {
-                let s = ""; const rows = document.getElementById(id).getElementsByClassName('role-row');
-                for (let row of rows) {
-                    let l = row.querySelector('.role-icon div').innerText; let n = row.querySelector('.player-name').innerText;
-                    let d = row.querySelector('div[style*="font-size:0.8rem"]').innerText;
-                    s += `${l.padEnd(3, ' ')} :: ${n} (${d})\n`;
-                } return s;
-            };
-            const txt = "```asciidoc\n= 결과 =\n[BLUE TEAM]\n" + getTxt('blueList') + "\n[RED TEAM]\n" + getTxt('redList') + "```";
-            if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => alert('복사됨'));
-        }
-    </script>
+
+                <div id="duoSelectionArea" style="flex:0.5; display:none;">
+                    <span class="label" style="color:#e84393">🔗 듀오 설정</span>
+                    <select id="pDuoLink">
+                        <option value="">없음</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="savePlayer()">저장</button>
+            <button class="btn-share" onclick="generateModalCode()">📤 공유 코드 생성</button>
+        </div>
+    </div>
+
+    <div id="champModal" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 700px; height: 80vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">챔피언 선택</h2>
+                <span class="close-btn" onclick="closeModal('champModal')">&times;</span>
+            </div>
+
+            <input type="text" id="champSearch" placeholder="챔피언 검색 (예: 가, 가렌)" onkeyup="filterChampGrid()"
+                style="margin-bottom: 15px; padding: 12px;">
+
+            <div id="champGridWrapper"
+                style="flex:1; overflow-y: auto; background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #333;">
+                <div id="champGrid" class="champ-grid"></div>
+            </div>
+
+            <div style="margin-top: 15px; text-align: right;">
+                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10
+                    선택됨</span>
+                <button class="btn-save" style="width: auto; padding: 10px 30px;"
+                    onclick="confirmChampSelect()">완료</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+            <h2>⚙️ 게임 설정</h2>
+
+            <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
+                <label class="switch-container">
+                    <span style="font-weight:bold; color:#e84393;">🔗 듀오 우선 배정 활성화</span>
+                    <input type="checkbox" id="duoToggle" onchange="toggleDuoActive(this.checked)" checked>
+                    <span class="checkmark"></span>
+                </label>
+                <p style="font-size:0.8rem; color:#888; margin-top:5px;">활성화 시 지정된 듀오를 같은 팀 1/2지망에 우선 배정합니다.</p>
+            </div>
+
+            <h3 style="margin-top:0;">메타 가중치 (결과 총점에만 반영)</h3>
+            <div id="weightInputs"></div>
+
+            <button class="btn-save" onclick="closeModal('settingsModal')">닫기 및 적용</button>
+        </div>
+    </div>
+
 </body>
 
 </html>
