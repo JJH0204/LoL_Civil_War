@@ -803,40 +803,6 @@ function copyResultText() {
     }
 }
 
-function importPlayerCode() {
-    const cEl = document.getElementById('importCode');
-    const code = cEl ? cEl.value.trim() : '';
-    if (!code) return;
-
-    try {
-        // LZString Decompress
-        const jsonStr = LZString.decompressFromEncodedURIComponent(code);
-        if(!jsonStr) throw new Error("압축 해제 실패");
-        
-        const d = JSON.parse(jsonStr);
-        
-        // 티어 점수로 티어 이름 찾기
-        const tierObj = TIER_DATA.find(t => t.score === d.s) || { name: "Unknown" };
-
-        players.push({ 
-            id: Date.now(), 
-            name: d.n, 
-            baseScore: d.s, 
-            tierName: tierObj.name, 
-            targetPos: d.t, 
-            subPos: d.u, 
-            mainPos: d.m, 
-            avoidPos: d.a, 
-            champ: d.c || []
-        });
-        cEl.value = ''; 
-        saveAndRender();
-    } catch (e) { 
-        console.error(e);
-        alert('올바르지 않거나 손상된 코드입니다.'); 
-    }
-}
-
 // [V20.8] 수정된 코드 생성 (압축 적용)
 function generateModalCode() {
     const nameEl = document.getElementById('pName');
