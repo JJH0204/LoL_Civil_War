@@ -695,8 +695,8 @@ function renderTeamResult(listId, scoreDispId, slots) {
         }
     });
 
-    const scoreEl = document.getElementById(scoreDispId);
-    if (scoreEl) scoreEl.innerText = "종합 전투력: " + Math.round(totalWeighted);
+    // const scoreEl = document.getElementById(scoreDispId);
+    // if (scoreEl) scoreEl.innerText = "종합 전투력: " + Math.round(totalWeighted);
 }
 
 // [V20.7] 모든 정보(듀오 포함)를 담도록 수정된 코드 생성 함수
