@@ -1,3 +1,4 @@
+// [V20.8] LZString 압축 및 데이터 최적화 적용
 let players = [];
 let editingId = null;
 let IS_DUO_ACTIVE = true;
@@ -26,39 +27,81 @@ const TIER_DATA = [
 
 let tempSelectedChamps = [];
 
+// [초기화] URL 파라미터 확인 및 데이터 로드
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. URL 파라미터 확인 (공유된 링크로 접속했는지?)
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedData = urlParams.get('p');
+    const compressedData = urlParams.get('d'); // 'p' 대신 'd' 사용 (Data)
 
-    if (sharedData) {
-        try {
-            // 공유된 데이터 복원
-            const decoded = JSON.parse(decodeURIComponent(atob(sharedData)));
-            if (Array.isArray(decoded)) {
-                players = decoded;
-                console.log("공유된 데이터를 로드했습니다.");
-                // 데이터 로드 후 URL 파라미터 제거 (깔끔하게)
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        } catch (e) {
-            console.error("공유 데이터 로드 실패:", e);
-            alert("공유된 링크의 데이터가 손상되었습니다.");
+    if (compressedData) {
+        if (decodeData(compressedData)) {
+            console.log("URL에서 데이터를 복원했습니다.");
+            // URL을 깔끔하게 정리 (새로고침 시 중복 로드 방지)
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // 데이터 로드 후 바로 계산 실행
+            setTimeout(calculateAndAssign, 500);
+        } else {
+            alert("공유된 링크의 데이터가 손상되었거나 호환되지 않습니다.");
+            loadData();
         }
     } else {
-        // 공유된 데이터가 없으면 로컬 저장소 로드
         loadData();
     }
 
     initUI();
     initChampGrid();
-    renderList(); // 리스트 렌더링
+    renderList();
 });
 
-// [V20.6] 챔피언 이름 조회 헬퍼
-function getChampName(id) {
-    const c = safeChampionList.find(x => x.id === id);
-    return c ? c.name : id;
+// [데이터 압축] 최소한의 정보만 추출하여 LZString 압축
+function encodeData() {
+    // 1. 필요한 데이터만 매핑 (키 이름 축소)
+    const minified = players.map(p => ({
+        i: p.id,
+        n: p.name,
+        s: p.baseScore,
+        t: p.targetPos,
+        u: p.subPos,    // u: sub
+        m: p.mainPos,
+        a: p.avoidPos,
+        c: p.champ || [],
+        d: p.duoId
+    }));
+
+    // 2. JSON 변환 후 압축
+    const jsonStr = JSON.stringify(minified);
+    return LZString.compressToEncodedURIComponent(jsonStr);
+}
+
+// [데이터 복원] 압축 해제 및 플레이어 객체 재구성
+function decodeData(compressed) {
+    try {
+        const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
+        if (!jsonStr) return false;
+
+        const minified = JSON.parse(jsonStr);
+        if (!Array.isArray(minified)) return false;
+
+        // 원본 구조로 복원 (티어 이름 등 계산값 다시 채우기)
+        players = minified.map(m => {
+            const tierObj = TIER_DATA.find(t => t.score === m.s) || { name: "배치중" };
+            return {
+                id: m.i,
+                name: m.n,
+                baseScore: m.s,
+                tierName: tierObj.name,
+                targetPos: m.t,
+                subPos: m.u,
+                mainPos: m.m,
+                avoidPos: m.a,
+                champ: m.c,
+                duoId: m.d
+            };
+        });
+        return true;
+    } catch (e) {
+        console.error("Decompression failed", e);
+        return false;
+    }
 }
 
 function initUI() {
@@ -360,6 +403,12 @@ function getDuoColor(p) {
     return DUO_COLORS[seed % DUO_COLORS.length];
 }
 
+// [V20.6] 챔피언 이름 조회 헬퍼 (함수 위치 이동)
+function getChampName(id) {
+    const c = safeChampionList.find(x => x.id === id);
+    return c ? c.name : id;
+}
+
 function renderList() {
     const list = document.getElementById('playerList');
     if (!list) return;
@@ -627,7 +676,6 @@ function analyzeGap(bSlots, rSlots) {
     });
 }
 
-// [V20.6 Update] 렌더링 로직 (클릭 시 챔피언 확장 & 툴팁)
 function renderTeamResult(listId, scoreDispId, slots) {
     const el = document.getElementById(listId);
     if (!el) return;
@@ -665,20 +713,16 @@ function renderTeamResult(listId, scoreDispId, slots) {
             if (p.isUnderdog) badge += ` <span class="pref-badge gap-warning">⚠️ 열세</span>`;
             if (p.isAce) badge += ` <span class="ace-badge">👑 ACE</span>`;
 
-            // [V20.6] 챔피언 목록 HTML 생성 (확장 기능 지원)
             let champHtml = '';
             if (Array.isArray(p.champ) && p.champ.length > 0) {
-                // class: result-champ-container 추가
                 champHtml = `<div class="result-champ-container">`;
                 p.champ.slice(0, 10).forEach(id => {
                     const cName = getChampName(id);
-                    // title 속성에 이름 추가 (마우스 오버 툴팁)
                     champHtml += `<img src="champion_images/${id}.png" class="result-champ-icon" title="${cName}" alt="${cName}">`;
                 });
                 champHtml += '</div>';
             }
 
-            // [V20.6] onclick 이벤트 추가 (토글)
             el.innerHTML += `
             <div class="role-row" onclick="this.classList.toggle('active')">
                 <div class="role-icon ${laneClass}"><div>${LANE_NAMES[lane]}</div></div>
@@ -699,117 +743,89 @@ function renderTeamResult(listId, scoreDispId, slots) {
     // if (scoreEl) scoreEl.innerText = "종합 전투력: " + Math.round(totalWeighted);
 }
 
-// [V20.7] 모든 정보(듀오 포함)를 담도록 수정된 코드 생성 함수
+// [V20.8] 수정된 코드 생성 (압축 적용)
 function generateModalCode() {
     const nameEl = document.getElementById('pName');
     const n = nameEl ? nameEl.value.trim() : '';
     if (!n) return alert("이름을 먼저 입력하세요.");
 
-    // 1. 현재 모달에서 선택된 듀오 파트너의 ID 가져오기
-    let duoPartnerName = null;
-    const duoSelect = document.getElementById('pDuoLink');
-    
-    // 듀오 기능이 켜져있고, 선택된 값이 있을 때
-    if (IS_DUO_ACTIVE && duoSelect && duoSelect.value) {
-        const partnerId = parseInt(duoSelect.value);
-        // 전체 플레이어 리스트에서 ID로 파트너 객체 찾기
-        const partner = players.find(p => p.id === partnerId);
-        if (partner) {
-            duoPartnerName = partner.name; // ID 대신 '이름'을 저장 (이식성 위해)
-        }
-    }
-
-    // 2. 데이터 객체 생성 (duo 필드 추가됨)
+    // 압축을 위해 필요한 데이터만 선별
     const d = {
-        n: n,                                                           // 이름
-        t: document.getElementById('pTierCombined').value,              // 티어 점수
-        tn: document.getElementById('pTierCombined').selectedOptions[0].text, // 티어 이름
-        p1: document.getElementById('pTargetPos').value,                // 1지망
-        p2: document.getElementById('pSubPos').value,                   // 2지망
-        pm: document.getElementById('pMainPos').value,                  // 주 라인
-        av: document.getElementById('pAvoidPos').value,                 // 기피 라인
-        ch: [...tempSelectedChamps],                                    // 챔피언 목록
-        duo: duoPartnerName                                             // [New] 듀오 파트너 이름
+        n: n,
+        s: parseInt(document.getElementById('pTierCombined').value),
+        t: document.getElementById('pTargetPos').value,
+        u: document.getElementById('pSubPos').value,
+        m: document.getElementById('pMainPos').value,
+        a: document.getElementById('pAvoidPos').value,
+        c: [...tempSelectedChamps]
     };
 
-    const code = btoa(encodeURIComponent(JSON.stringify(d)));
+    // JSON -> String -> LZString Compress
+    const jsonStr = JSON.stringify(d);
+    const code = LZString.compressToEncodedURIComponent(jsonStr);
 
     if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(code).then(() => alert("모든 정보(듀오 포함)가 복사되었습니다!"));
+        navigator.clipboard.writeText(code).then(() => alert("압축된 공유 코드가 복사되었습니다!"));
     } else {
         prompt("아래 코드를 복사하세요:", code);
     }
 }
 
-function saveAndRender() { localStorage.setItem('lol_cw_v20_6', JSON.stringify(players)); renderList(); }
-function loadData() { const d = localStorage.getItem('lol_cw_v20_6'); if (d) { players = JSON.parse(d); renderList(); } }
-// function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
-function exportPlayerCode() { /* Deprecated */ }
-// [V20.7] 듀오 정보까지 복원하는 임포트 함수
+// [V20.8] 수정된 코드 가져오기 (압축 해제)
 function importPlayerCode() {
     const cEl = document.getElementById('importCode');
-    const c = cEl ? cEl.value.trim() : '';
-    if (!c) return;
+    const code = cEl ? cEl.value.trim() : '';
+    if (!code) return;
 
     try {
-        const d = JSON.parse(decodeURIComponent(atob(c)));
+        // LZString Decompress
+        const jsonStr = LZString.decompressFromEncodedURIComponent(code);
+        if(!jsonStr) throw new Error("압축 해제 실패");
         
-        // 1. 신규 플레이어 객체 생성
-        const newPlayerId = Date.now();
-        const newPlayer = { 
-            id: newPlayerId, 
+        const d = JSON.parse(jsonStr);
+        
+        // 티어 점수로 티어 이름 찾기
+        const tierObj = TIER_DATA.find(t => t.score === d.s) || { name: "Unknown" };
+
+        players.push({ 
+            id: Date.now(), 
             name: d.n, 
-            baseScore: parseInt(d.t), 
-            tierName: d.tn, 
-            targetPos: d.p1, 
-            subPos: d.p2, 
-            mainPos: d.pm, 
-            avoidPos: d.av, 
-            champ: d.ch || [], // 챔피언 정보가 없으면 빈 배열
-            duoId: null 
-        };
-
-        // 2. 듀오 연결 로직 (이름 매칭)
-        if (d.duo) {
-            // 이미 등록된 플레이어 중 이름이 일치하는 사람 찾기
-            const partner = players.find(p => p.name === d.duo);
-            if (partner) {
-                // 상호 연결 (Mutual Link)
-                newPlayer.duoId = partner.id;
-                partner.duoId = newPlayerId;
-                alert(`'${d.duo}'님과 듀오로 자동 연결되었습니다.`);
-            } else {
-                console.log(`듀오 파트너 '${d.duo}'님이 아직 등록되지 않았습니다.`);
-            }
-        }
-
-        players.push(newPlayer);
+            baseScore: d.s, 
+            tierName: tierObj.name, 
+            targetPos: d.t, 
+            subPos: d.u, 
+            mainPos: d.m, 
+            avoidPos: d.a, 
+            champ: d.c || []
+        });
         cEl.value = ''; 
         saveAndRender();
-        
-    } catch (e) {
+    } catch (e) { 
         console.error(e);
-        alert('올바르지 않은 코드입니다.'); 
+        alert('올바르지 않거나 손상된 코드입니다.'); 
     }
 }
+
+function saveAndRender() { localStorage.setItem('lol_cw_v20_8', JSON.stringify(players)); renderList(); }
+function loadData() { const d = localStorage.getItem('lol_cw_v20_8'); if (d) { players = JSON.parse(d); renderList(); } }
+function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
+function exportPlayerCode() { /* Deprecated */ }
+
 function copyResultText() {
     const getTxt = (id) => {
         let s = "";
         const el = document.getElementById(id);
         if (!el) return "";
         const rows = el.getElementsByClassName('role-row');
-        
         for (let row of rows) {
-            let l = row.querySelector('.role-icon div').innerText;
+            let l = row.querySelector('.role-icon div').innerText; 
             
-            // 이름 추출 (배지 텍스트 제외하고 순수 이름만 가져오기)
+            // 이름만 깔끔하게 추출
             let nameContainer = row.querySelector('.player-name');
             let nameClone = nameContainer.cloneNode(true);
-            // 내부의 뱃지들(span 태그) 제거
             nameClone.querySelectorAll('span').forEach(e => e.remove());
             let name = nameClone.innerText.trim();
 
-            // 추가 정보 (ACE, 위크사이드) 확인
             let extras = [];
             if (row.querySelector('.ace-badge')) extras.push("👑ACE");
             if (row.querySelector('.gap-warning')) extras.push("⚠️열세");
@@ -821,18 +837,18 @@ function copyResultText() {
         return s;
     };
 
-    // https://context.reverso.net/translation/korean-english/%EC%83%9D%EC%84%B1 현재 players 데이터를 압축하여 URL 파라미터로 생성
+    // [V20.8] URL 생성 시에도 압축 사용 (핵심)
     let shareUrl = "";
     try {
-        const shareData = btoa(encodeURIComponent(JSON.stringify(players)));
-        shareUrl = `${window.location.origin}${window.location.pathname}?p=${shareData}`;
+        const compressedData = encodeData();
+        shareUrl = `${window.location.origin}${window.location.pathname}?d=${compressedData}`;
     } catch (e) {
         console.error("URL 생성 실패", e);
         shareUrl = "(URL 생성 실패)";
     }
 
     const txt = "```asciidoc\n= 결과 =\n[BLUE]\n" + getTxt('blueList') + "\n[RED]\n" + getTxt('redList') + "```\n" +
-                "🔗 상세 결과(선호 챔피언 등) 확인하기:\n" + shareUrl;
+                "🔗 상세 결과 확인:\n" + shareUrl;
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(txt).then(() => alert('결과 텍스트와 공유 링크가 복사되었습니다!'));
