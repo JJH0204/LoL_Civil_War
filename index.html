@@ -318,7 +318,7 @@
 <body>
 
     <div class="container">
-        <h1>⚔️ LoL Civil War v18.0</h1>
+        <h1>⚔️ LoL Civil War</h1>
         <div class="sub-title"> </div>
 
         <div class="input-wrapper">
@@ -357,7 +357,7 @@
                         id="pTargetPos"></select></div>
                 <div style="flex: 1;"><span class="label" style="color:#f39c12">2지망</span><select id="pSubPos"></select>
                 </div>
-                <div style="flex: 1;"><span class="label" style="color:#888">본캐</span><select id="pMainPos"></select>
+                <div style="flex: 1;"><span class="label" style="color:#888">주 라인</span><select id="pMainPos"></select>
                 </div>
                 <div style="flex: 1;"><span class="label" style="color:#c0392b">기피</span><select
                         id="pAvoidPos"></select></div>
@@ -422,7 +422,7 @@
                 <div style="flex:1"><span class="label">2지망</span><select id="mSubPos"></select></div>
             </div>
             <div class="input-row">
-                <div style="flex:1"><span class="label">본캐</span><select id="mMainPos"></select></div>
+                <div style="flex:1"><span class="label">주 라인</span><select id="mMainPos"></select></div>
                 <div style="flex:1"><span class="label" style="color:#c0392b">기피</span><select id="mAvoidPos"></select>
                 </div>
             </div>
@@ -531,7 +531,7 @@
             unassigned = sortForNextRound(unassigned, 0.9);
             unassigned = attemptAssign(unassigned, '2ND', blueSlots, redSlots, blueTeam, redTeam, 0.9);
 
-            // --- ROUND 3: 본캐 구제 (가중치 0.95 + 재정렬) ---
+            // --- ROUND 3: 주 라인 구제 (가중치 0.95 + 재정렬) ---
             unassigned = sortForNextRound(unassigned, 0.95);
             unassigned = attemptAssign(unassigned, 'MAIN', blueSlots, redSlots, blueTeam, redTeam, 0.95);
 
@@ -686,7 +686,7 @@
             LANES.forEach(l => {
                 const p = slots[l];
                 if (!p) return;
-                // 활동량 삭제됨 -> 조건: 1지망/2지망/본캐 배정자 중 최고점
+                // 활동량 삭제됨 -> 조건: 1지망/2지망/주 라인 배정자 중 최고점
                 if (['1ST', '1ST_RAND', '2ND', '2ND_RAND', 'MAIN'].includes(p.assignType) && p.mainPos === p.assignedLane) {
                     if (p.finalScore > maxScore) { maxScore = p.finalScore; bestP = p; }
                 }
@@ -715,7 +715,7 @@
                     else if (p.assignType === '1ST_RAND') badge = '<span class="pref-badge pref-1st">1지망(랜덤)</span>';
                     else if (p.assignType === '2ND') badge = '<span class="pref-badge pref-2nd">2지망</span>';
                     else if (p.assignType === '2ND_RAND') badge = '<span class="pref-badge pref-2nd">2지망(랜덤)</span>';
-                    else if (p.assignType === 'MAIN') badge = '<span class="pref-badge pref-main">본캐</span>';
+                    else if (p.assignType === 'MAIN') badge = '<span class="pref-badge pref-main">주 라인</span>';
                     else if (p.assignType === 'FORCE') badge = '<span class="pref-badge pref-force">강제</span>';
                     else badge = '<span class="pref-badge pref-auto">오토필</span>';
 
