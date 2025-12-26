@@ -17,6 +17,17 @@
 <body>
 
     <div class="container">
+        <div class="file-controls">
+            <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(this)">
+        
+            <button class="btn-icon" style="background:#27ae60; border-color:#2ecc71;"
+                onclick="document.getElementById('fileInput').click()">
+                📂 로스터 불러오기
+            </button>
+            <button class="btn-icon" style="background:#2980b9; border-color:#3498db;" onclick="saveRosterToFile()">
+                💾 로스터 저장
+            </button>
+        </div>
         <div class="top-bar">
             <h1>⚔️ LoL Civil War</h1>
             <button class="btn-icon" onclick="openSettings()">⚙️ 설정</button>

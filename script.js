@@ -52,58 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderList();
 });
 
-// [데이터 압축] 최소한의 정보만 추출하여 LZString 압축
-function encodeData() {
-    // 1. 필요한 데이터만 매핑 (키 이름 축소)
-    const minified = players.map(p => ({
-        i: p.id,
-        n: p.name,
-        s: p.baseScore,
-        t: p.targetPos,
-        u: p.subPos,    // u: sub
-        m: p.mainPos,
-        a: p.avoidPos,
-        c: p.champ || [],
-        d: p.duoId
-    }));
-
-    // 2. JSON 변환 후 압축
-    const jsonStr = JSON.stringify(minified);
-    return LZString.compressToEncodedURIComponent(jsonStr);
-}
-
-// [데이터 복원] 압축 해제 및 플레이어 객체 재구성
-function decodeData(compressed) {
-    try {
-        const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
-        if (!jsonStr) return false;
-
-        const minified = JSON.parse(jsonStr);
-        if (!Array.isArray(minified)) return false;
-
-        // 원본 구조로 복원 (티어 이름 등 계산값 다시 채우기)
-        players = minified.map(m => {
-            const tierObj = TIER_DATA.find(t => t.score === m.s) || { name: "배치중" };
-            return {
-                id: m.i,
-                name: m.n,
-                baseScore: m.s,
-                tierName: tierObj.name,
-                targetPos: m.t,
-                subPos: m.u,
-                mainPos: m.m,
-                avoidPos: m.a,
-                champ: m.c,
-                duoId: m.d
-            };
-        });
-        return true;
-    } catch (e) {
-        console.error("Decompression failed", e);
-        return false;
-    }
-}
-
 function initUI() {
     const tSel = document.getElementById('pTierCombined');
     if (tSel) {
@@ -743,74 +691,85 @@ function renderTeamResult(listId, scoreDispId, slots) {
     // if (scoreEl) scoreEl.innerText = "종합 전투력: " + Math.round(totalWeighted);
 }
 
-// [V20.8] 수정된 코드 생성 (압축 적용)
-function generateModalCode() {
-    const nameEl = document.getElementById('pName');
-    const n = nameEl ? nameEl.value.trim() : '';
-    if (!n) return alert("이름을 먼저 입력하세요.");
-
-    // 압축을 위해 필요한 데이터만 선별
-    const d = {
-        n: n,
-        s: parseInt(document.getElementById('pTierCombined').value),
-        t: document.getElementById('pTargetPos').value,
-        u: document.getElementById('pSubPos').value,
-        m: document.getElementById('pMainPos').value,
-        a: document.getElementById('pAvoidPos').value,
-        c: [...tempSelectedChamps]
-    };
-
-    // JSON -> String -> LZString Compress
-    const jsonStr = JSON.stringify(d);
-    const code = LZString.compressToEncodedURIComponent(jsonStr);
-
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(code).then(() => alert("압축된 공유 코드가 복사되었습니다!"));
-    } else {
-        prompt("아래 코드를 복사하세요:", code);
-    }
-}
-
-// [V20.8] 수정된 코드 가져오기 (압축 해제)
-function importPlayerCode() {
-    const cEl = document.getElementById('importCode');
-    const code = cEl ? cEl.value.trim() : '';
-    if (!code) return;
-
-    try {
-        // LZString Decompress
-        const jsonStr = LZString.decompressFromEncodedURIComponent(code);
-        if(!jsonStr) throw new Error("압축 해제 실패");
-        
-        const d = JSON.parse(jsonStr);
-        
-        // 티어 점수로 티어 이름 찾기
-        const tierObj = TIER_DATA.find(t => t.score === d.s) || { name: "Unknown" };
-
-        players.push({ 
-            id: Date.now(), 
-            name: d.n, 
-            baseScore: d.s, 
-            tierName: tierObj.name, 
-            targetPos: d.t, 
-            subPos: d.u, 
-            mainPos: d.m, 
-            avoidPos: d.a, 
-            champ: d.c || []
-        });
-        cEl.value = ''; 
-        saveAndRender();
-    } catch (e) { 
-        console.error(e);
-        alert('올바르지 않거나 손상된 코드입니다.'); 
-    }
-}
-
 function saveAndRender() { localStorage.setItem('lol_cw_v20_8', JSON.stringify(players)); renderList(); }
 function loadData() { const d = localStorage.getItem('lol_cw_v20_8'); if (d) { players = JSON.parse(d); renderList(); } }
 function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
 function exportPlayerCode() { /* Deprecated */ }
+// [V21.0] 로스터 파일 저장 (Export JSON)
+function saveRosterToFile() {
+    if (players.length === 0) return alert("저장할 플레이어 데이터가 없습니다.");
 
+    // 1. 저장할 데이터 객체 구성
+    const dataObj = {
+        version: "v21.0",
+        timestamp: new Date().toISOString(),
+        players: players
+    };
+
+    // 2. JSON 문자열 변환
+    const jsonStr = JSON.stringify(dataObj, null, 2);
+
+    // 3. Blob 객체 생성
+    const blob = new Blob([jsonStr], { type: "application/json" });
+
+    // 4. 가상의 다운로드 링크 생성 및 클릭
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    
+    // 파일명: lol_cw_날짜_시간.json
+    const date = new Date();
+    const fileName = `lol_cw_${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}_${date.getHours()}${date.getMinutes()}.json`;
+    
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    
+    // 5. 뒷정리
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// [V21.0] 로스터 파일 불러오기 (Import JSON)
+function handleFileLoad(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            const data = JSON.parse(content);
+
+            // 데이터 유효성 검사 (간단 버전)
+            if (data.players && Array.isArray(data.players)) {
+                // 기존 데이터에 덮어쓰기 vs 추가하기 (여기선 덮어쓰기로 구현, 필요시 confirm으로 분기 가능)
+                if(confirm("현재 리스트를 지우고 불러온 파일로 대체하시겠습니까?")) {
+                    players = data.players;
+                } else {
+                    // 병합 (ID 충돌 방지를 위해 ID 재발급 필요할 수 있음)
+                    // 여기선 간단히 추가만 함
+                    players = [...players, ...data.players];
+                }
+                
+                saveAndRender(); // 로컬 스토리지 저장 및 화면 갱신
+                alert(`성공적으로 불러왔습니다! (${data.players.length}명)`);
+            } else {
+                alert("올바르지 않은 로스터 파일 형식입니다.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("파일을 읽는 중 오류가 발생했습니다.");
+        }
+    };
+
+    reader.readAsText(file);
+    // 같은 파일을 다시 열 때를 대비해 값 초기화
+    input.value = ''; 
+}
+
+// [V21.0] 공유 텍스트 생성 함수 수정 (URL 제거)
 function copyResultText() {
     const getTxt = (id) => {
         let s = "";
@@ -819,8 +778,6 @@ function copyResultText() {
         const rows = el.getElementsByClassName('role-row');
         for (let row of rows) {
             let l = row.querySelector('.role-icon div').innerText; 
-            
-            // 이름만 깔끔하게 추출
             let nameContainer = row.querySelector('.player-name');
             let nameClone = nameContainer.cloneNode(true);
             nameClone.querySelectorAll('span').forEach(e => e.remove());
@@ -831,27 +788,16 @@ function copyResultText() {
             if (row.querySelector('.gap-warning')) extras.push("⚠️열세");
             
             let extraTxt = extras.length > 0 ? ` ${extras.join(' ')}` : "";
-
             s += `${l.padEnd(3, ' ')} :: ${name}${extraTxt}\n`;
         } 
         return s;
     };
 
-    // [V20.8] URL 생성 시에도 압축 사용 (핵심)
-    let shareUrl = "";
-    try {
-        const compressedData = encodeData();
-        shareUrl = `${window.location.origin}${window.location.pathname}?d=${compressedData}`;
-    } catch (e) {
-        console.error("URL 생성 실패", e);
-        shareUrl = "(URL 생성 실패)";
-    }
-
     const txt = "```asciidoc\n= 결과 =\n[BLUE]\n" + getTxt('blueList') + "\n[RED]\n" + getTxt('redList') + "```\n" +
-                "🔗 상세 결과 확인:\n" + shareUrl;
+                "💡 **상세 설정 공유:** '로스터 저장' 버튼을 눌러 .json 파일을 디스코드에 업로드하세요.";
 
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(txt).then(() => alert('결과 텍스트와 공유 링크가 복사되었습니다!'));
+        navigator.clipboard.writeText(txt).then(() => alert('결과 텍스트가 복사되었습니다!'));
     } else {
         alert("클립보드 복사를 지원하지 않는 브라우저입니다.");
     }

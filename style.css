@@ -130,3 +130,10 @@ input[type="text"], select { width: 100%; padding: 10px; background: #2b2b2b; bo
 .btn-share { background: #444; color: #ccc; width: 100%; padding: 12px; border: 1px solid #555; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; transition: 0.2s; }
 .btn-share:hover { background: #555; color: white; }
 .btn-del { background: #c0392b; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+/* [V21.0] 파일 컨트롤 영역 스타일 */
+.file-controls { display: flex; gap: 10px; flex: 1; }
+/* 모바일 대응 등 화면이 작을 때 버튼 정렬 */
+@media (max-width: 600px) {
+    .file-controls { flex-direction: column; }
+    .btn-icon { width: 100%; }
+}
