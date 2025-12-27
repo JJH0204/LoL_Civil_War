@@ -695,28 +695,76 @@ function saveAndRender() { localStorage.setItem('lol_cw_v20_8', JSON.stringify(p
 function loadData() { const d = localStorage.getItem('lol_cw_v20_8'); if (d) { players = JSON.parse(d); renderList(); } }
 function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
 function exportPlayerCode() { /* Deprecated */ }
-// [V21.0] 로스터 파일 저장 (Export JSON)
+// [V21.0] 이미지 캡처 및 클립보드 복사 함수 (핵심)
+function copyResultImage() {
+    const element = document.getElementById('resultArea');
+    if (!element || element.style.display === 'none') {
+        return alert("결과가 생성된 후에 캡처할 수 있습니다.");
+    }
+
+    const btn = document.getElementById('btnCapture');
+    const originalText = btn.innerText;
+    btn.innerText = "📸 캡처 중...";
+    btn.disabled = true;
+
+    // html2canvas 옵션 설정
+    html2canvas(element, {
+        backgroundColor: "#121212", // 투명 배경 방지 (디스코드 최적화)
+        scale: 2, // 고해상도 캡처
+        useCORS: true, // 이미지 로드 이슈 방지
+        logging: false
+    }).then(canvas => {
+        canvas.toBlob(blob => {
+            if (!blob) {
+                alert("이미지 생성 실패");
+                resetBtn();
+                return;
+            }
+
+            try {
+                // Clipboard API로 이미지 쓰기
+                const item = new ClipboardItem({ "image/png": blob });
+                navigator.clipboard.write([item]).then(() => {
+                    alert("✅ 이미지가 클립보드에 복사되었습니다!\n디스코드 입력창에 붙여넣기(Ctrl+V) 하세요.");
+                    resetBtn();
+                }).catch(err => {
+                    console.error("클립보드 쓰기 실패:", err);
+                    alert("클립보드 접근 권한이 없거나 지원하지 않는 브라우저입니다.");
+                    resetBtn();
+                });
+            } catch (err) {
+                console.error("ClipboardItem 오류:", err);
+                alert("이 브라우저에서는 이미지 복사를 지원하지 않을 수 있습니다.");
+                resetBtn();
+            }
+        });
+    }).catch(err => {
+        console.error("html2canvas 오류:", err);
+        alert("캡처 중 오류가 발생했습니다.");
+        resetBtn();
+    });
+
+    function resetBtn() {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+// [V21.0] 로스터 파일 저장 (이전 기획 유지)
 function saveRosterToFile() {
     if (players.length === 0) return alert("저장할 플레이어 데이터가 없습니다.");
 
-    // 1. 저장할 데이터 객체 구성
     const dataObj = {
         version: "v21.0",
         timestamp: new Date().toISOString(),
         players: players
     };
 
-    // 2. JSON 문자열 변환
     const jsonStr = JSON.stringify(dataObj, null, 2);
-
-    // 3. Blob 객체 생성
     const blob = new Blob([jsonStr], { type: "application/json" });
-
-    // 4. 가상의 다운로드 링크 생성 및 클릭
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     
-    // 파일명: lol_cw_날짜_시간.json
     const date = new Date();
     const fileName = `lol_cw_${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}_${date.getHours()}${date.getMinutes()}.json`;
     
@@ -725,35 +773,28 @@ function saveRosterToFile() {
     document.body.appendChild(a);
     a.click();
     
-    // 5. 뒷정리
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
 
-// [V21.0] 로스터 파일 불러오기 (Import JSON)
+// [V21.0] 로스터 파일 불러오기
 function handleFileLoad(input) {
     const file = input.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    
     reader.onload = function(e) {
         try {
             const content = e.target.result;
             const data = JSON.parse(content);
 
-            // 데이터 유효성 검사 (간단 버전)
             if (data.players && Array.isArray(data.players)) {
-                // 기존 데이터에 덮어쓰기 vs 추가하기 (여기선 덮어쓰기로 구현, 필요시 confirm으로 분기 가능)
                 if(confirm("현재 리스트를 지우고 불러온 파일로 대체하시겠습니까?")) {
                     players = data.players;
                 } else {
-                    // 병합 (ID 충돌 방지를 위해 ID 재발급 필요할 수 있음)
-                    // 여기선 간단히 추가만 함
                     players = [...players, ...data.players];
                 }
-                
-                saveAndRender(); // 로컬 스토리지 저장 및 화면 갱신
+                saveAndRender(); 
                 alert(`성공적으로 불러왔습니다! (${data.players.length}명)`);
             } else {
                 alert("올바르지 않은 로스터 파일 형식입니다.");
@@ -763,9 +804,7 @@ function handleFileLoad(input) {
             alert("파일을 읽는 중 오류가 발생했습니다.");
         }
     };
-
     reader.readAsText(file);
-    // 같은 파일을 다시 열 때를 대비해 값 초기화
     input.value = ''; 
 }
 
