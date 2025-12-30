@@ -990,7 +990,16 @@ async function analyzeGameAI() {
         else aiText = await fetchOpenAIResponse(apiKey, prompt);
         loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = marked.parse(aiText);
     } catch (error) {
-        loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = `<p style="color: #e74c3c;">⚠️ 오류: ${error.message}</p>`;
+        loading.style.display = 'none'; content.style.display = 'block';
+        content.innerHTML = `<p style="color: #e74c3c;">⚠️ 오류: ${error.message}</p>`;
+        let debugMsg =
+            '[AI 분석 예외 발생!]\n' +
+            '에러: ' + (error && error.message ? error.message : error) + '\n' +
+            (error && error.stack ? ('스택: ' + error.stack + '\n') : '') +
+            'AI_PROVIDER: ' + (typeof AI_PROVIDER !== 'undefined' ? AI_PROVIDER : 'undefined') + '\n' +
+            'API Key: ' + (apiKey ? (apiKey.slice(0,6) + '...') : '없음') + '\n' +
+            'Prompt: ' + (prompt ? prompt.slice(0,120) + (prompt.length>120?'...':'') : '없음');
+        alert(debugMsg);
     }
 }
 
@@ -1045,3 +1054,37 @@ async function fetchGeminiResponse(key, prompt) {
     if (data.error) throw new Error(data.error.message);
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '분석 실패';
 }
+
+// AI 분석 관련 전역 변수 선언 및 동기화
+window.AI_PROVIDER = localStorage.getItem('ai_provider') || 'openai';
+window.OPENAI_API_KEY = localStorage.getItem('openai_key') || '';
+window.GEMINI_API_KEY = localStorage.getItem('gemini_key') || '';
+
+// 설정 select/input 변경 시 동기화 함수
+function saveApiKeys() {
+    const providerSel = document.getElementById('aiProviderSelect');
+    const openaiInput = document.getElementById('openaiKeyInput');
+    const geminiInput = document.getElementById('geminiKeyInput');
+    if (providerSel) {
+        window.AI_PROVIDER = providerSel.value;
+        localStorage.setItem('ai_provider', providerSel.value);
+    }
+    if (openaiInput) {
+        window.OPENAI_API_KEY = openaiInput.value;
+        localStorage.setItem('openai_key', openaiInput.value);
+    }
+    if (geminiInput) {
+        window.GEMINI_API_KEY = geminiInput.value;
+        localStorage.setItem('gemini_key', geminiInput.value);
+    }
+}
+
+// 페이지 로드시 select/input 값 동기화
+window.addEventListener('DOMContentLoaded', () => {
+    const providerSel = document.getElementById('aiProviderSelect');
+    const openaiInput = document.getElementById('openaiKeyInput');
+    const geminiInput = document.getElementById('geminiKeyInput');
+    if (providerSel && window.AI_PROVIDER) providerSel.value = window.AI_PROVIDER;
+    if (openaiInput && window.OPENAI_API_KEY) openaiInput.value = window.OPENAI_API_KEY;
+    if (geminiInput && window.GEMINI_API_KEY) geminiInput.value = window.GEMINI_API_KEY;
+});
