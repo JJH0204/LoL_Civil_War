@@ -18,20 +18,28 @@ function handleDrop(e, tgtTeam) {
     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
     if (!data) return;
     let row = e.target.closest('.role-row');
-    let tgtLane = row ? Object.keys(LANE_NAMES).find(k => LANE_NAMES[k] === row.querySelector('.role-icon div').innerText) : null;
+    let tgtLane = row ? Object.keys(window.LANE_NAMES).find(k => window.LANE_NAMES[k] === row.querySelector('.role-icon div').innerText) : null;
     if (data.t === tgtTeam && data.l === tgtLane) return;
     swapPlayers(data.t, data.l, tgtTeam, tgtLane);
 }
 function swapPlayers(st, sl, tt, tl) {
-    const sSlots = st === 'BLUE' ? lastBlueSlots : lastRedSlots;
-    const tSlots = tt === 'BLUE' ? lastBlueSlots : lastRedSlots;
+    const sSlots = st === 'BLUE' ? window.lastBlueSlots : window.lastRedSlots;
+    const tSlots = tt === 'BLUE' ? window.lastBlueSlots : window.lastRedSlots;
     const sp = sSlots[sl];
     const tp = tSlots[tl];
     sSlots[sl] = tp;
     tSlots[tl] = sp;
     if (sp) sp.assignedLane = tl;
     if (tp) tp.assignedLane = sl;
-    renderTR('blueList', 'blueScoreDisp', lastBlueSlots, 'BLUE');
-    renderTR('redList', 'redScoreDisp', lastRedSlots, 'RED');
-    if (typeof playSound === 'function') playSound('pick');
+    window.renderTR('blueList', 'blueScoreDisp', window.lastBlueSlots, 'BLUE');
+    window.renderTR('redList', 'redScoreDisp', window.lastRedSlots, 'RED');
+    if (typeof window.playSound === 'function') window.playSound('pick');
 }
+
+// 전역 등록
+window.handleDragStart = handleDragStart;
+window.handleDragEnd = handleDragEnd;
+window.handleDragOver = handleDragOver;
+window.handleDragLeave = handleDragLeave;
+window.handleDrop = handleDrop;
+window.swapPlayers = swapPlayers;

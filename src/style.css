@@ -619,12 +619,36 @@ input[type="text"], select {
     overflow-y: auto;
     margin-top: 10px;
     min-height: 120px;
+    padding: 18px 20px 18px 20px;
+    background: #20232a;
+    border-radius: 10px;
+    box-sizing: border-box;
+    /* 스크롤바와 텍스트 간격 확보 */
+}
+
+/* 스크롤바 디자인 (Webkit 기반 브라우저) */
+#aiResultScrollArea::-webkit-scrollbar {
+    width: 10px;
+}
+#aiResultScrollArea::-webkit-scrollbar-thumb {
+    background: #444a5a;
+    border-radius: 8px;
+    border: 2px solid #20232a;
+}
+#aiResultScrollArea::-webkit-scrollbar-track {
+    background: #20232a;
+    border-radius: 10px;
+}
+
+/* Firefox용 스크롤바 */
+#aiResultScrollArea {
+    scrollbar-width: thin;
+    scrollbar-color: #444a5a #20232a;
 }
 
 #aiResultCopyRow {
     margin-top: 18px;
     text-align: right;
-}
 }
 #aiModal .close-btn {
   position: absolute;

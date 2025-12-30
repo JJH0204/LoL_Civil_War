@@ -10,6 +10,9 @@ import './team.js';
 import './gemini.js';
 
 let IS_DUO_ACTIVE = true;
+if (typeof window !== 'undefined') {
+    window.IS_DUO_ACTIVE = IS_DUO_ACTIVE;
+}
 // let tempSelectedChamps = []; // 중복 선언 방지: 이미 다른 파일에서 선언됨
 
 // [초기화] URL 파라미터 확인 및 데이터 로드
@@ -102,13 +105,13 @@ function initChampGrid() {
 }
 
 function updateWeight(lane, val) {
-    LANE_WEIGHTS[lane] = parseFloat(val);
+    window.LANE_WEIGHTS[lane] = parseFloat(val);
     const el = document.getElementById(`wVal_${lane}`);
     if (el) el.innerText = val;
 }
 
 function toggleDuoActive(isChecked) {
-    IS_DUO_ACTIVE = isChecked;
+    window.IS_DUO_ACTIVE = isChecked;
     renderList();
 }
 
