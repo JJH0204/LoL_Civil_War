@@ -45,8 +45,10 @@
 
 
         <div class="import-box" style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="importCode" placeholder="공유 코드 붙여넣기..." style="flex:2; background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
-            <button class="btn-icon" onclick="importPlayerCode()" style="flex:1; background: #333; color: white; border:1px solid #555;">📥 추가</button>
+            <input type="text" id="importCode" placeholder="공유 코드 붙여넣기..."
+                style="flex:2; background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
+            <button class="btn-icon" onclick="importPlayerCode()"
+                style="flex:1; background: #333; color: white; border:1px solid #555;">📥 추가</button>
         </div>
 
         <button class="btn-calc" onclick="calculateAndAssign(); playSound('click');">⚖️ 정밀 밸런싱 시작</button>
@@ -88,7 +90,8 @@
             <span class="close-btn" onclick="closeModal('playerModal')">&times;</span>
             <h2 id="modalTitle">참가자 등록</h2>
             <div class="input-row">
-                <div style="flex:2"><span class="label">소환사명</span><input type="text" id="pName" placeholder="예: Summoner#1234"></div>
+                <div style="flex:2"><span class="label">소환사명</span><input type="text" id="pName"
+                        placeholder="예: Summoner#1234"></div>
                 <div style="flex:1.5"><span class="label">티어 (통합)</span><select id="pTierCombined"></select></div>
             </div>
             <div class="input-row">
@@ -119,7 +122,9 @@
                 </div>
             </div>
             <button class="btn-save" onclick="savePlayer()">저장</button>
-            <button class="btn-share" onclick="generateModalCode()" style="margin-top:10px; width:100%; background:#444; color:#ccc; border: 1px solid #555;">📤 코드 생성</button>
+            <button class="btn-share" onclick="generateModalCode()"
+                style="margin-top:10px; width:100%; background:#444; color:#ccc; border: 1px solid #555;">📤 코드
+                생성</button>
         </div>
     </div>
 
@@ -136,7 +141,8 @@
                 <div id="champGrid" class="champ-grid"></div>
             </div>
             <div style="margin-top: 15px; text-align: right;">
-                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10 선택됨</span>
+                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10
+                    선택됨</span>
                 <button class="btn-save" style="width: auto; padding: 10px 30px;"
                     onclick="confirmChampSelect()">완료</button>
             </div>
@@ -147,42 +153,54 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
             <h2>⚙️ 게임 설정</h2>
-            
+
             <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
                 <label class="label" style="color: var(--accent); font-weight:bold;">🤖 사용할 AI 모델 선택</label>
                 <select id="aiProviderSelect" onchange="toggleAiInput(this.value)" +
                     style="margin-top:5px; margin-bottom:15px;">
                     <option value="openai">OpenAI (GPT-4o-mini)</option>
                     <option value="gemini">Google (Gemini 1.5 Flash)</option>
-                    </select>
-                
+                </select>
+
                 <div id="openaiKeyArea">
                     <label class="label">🔑 OpenAI API Key</label>
                     <input type="password" id="openaiKeyInput" placeholder="sk-..." onchange="saveApiKeys()">
-                    </div>
-                
+                </div>
+
                 <div id="geminiKeyArea" style="display:none;">
                     <label class="label">🔑 Google Gemini API Key</label>
                     <input type="password" id="geminiKeyInput" placeholder="AIza..." onchange="saveApiKeys()">
                     <p style="font-size:0.7rem; color:#888; margin-top:5px;">
                         Gemini API는 구글 AI Studio에서 무료로 발급 가능합니다.
-                        </p>
-                    </div>
+                    </p>
                 </div>
-            
+            </div>
+
             <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
                 <label class="switch-container">
                     <span style="font-weight:bold; color:#e84393;">🔗 듀오 우선 배정 활성화</span>
                     <input type="checkbox" id="duoToggle" onchange="toggleDuoActive(this.checked)" checked>
                     <span class="checkmark"></span>
-                    </label>
-                </div>
+                </label>
+            </div>
             <h3 style="margin-top:0;">메타 가중치</h3>
             <div id="weightInputs"></div>
             <button class="btn-save" onclick="closeModal('settingsModal'); playSound('click');">닫기</button>
-            </div>
         </div>
+    </div>
 
+    <!-- AI 분석 결과 모달 -->
+    <div id="aiModal" class="modal">
+        <div class="modal-content" style="max-width:600px; min-height:220px;">
+            <span class="close-btn" onclick="closeModal('aiModal')">&times;</span>
+            <h2>🤖 AI 전력 분석 결과</h2>
+            <div id="aiLoading"
+                style="display:none; text-align:center; padding:30px 0; color:#0ac8b9; font-size:1.2rem;">
+                <span class="loader" style="margin-right:10px;"></span>AI가 분석 중입니다...
+            </div>
+            <div id="aiResultContent" style="min-height:120px; margin-top:10px;"></div>
+        </div>
+    </div>
 </body>
 
 </html>
