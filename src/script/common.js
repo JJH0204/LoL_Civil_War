@@ -63,9 +63,12 @@ function importPlayerCode() {
         // LZString Decompress
         const jsonStr = LZString.decompressFromEncodedURIComponent(code);
         if(!jsonStr) throw new Error("압축 해제 실패");
-        
-        const d = JSON.parse(jsonStr);
-        
+        let d;
+        try {
+            d = JSON.parse(jsonStr);
+        } catch (jsonErr) {
+            throw new Error("공유 코드가 올바르지 않거나 손상되었습니다. (JSON 파싱 실패)\n\n다시 복사해 붙여넣어 주세요.");
+        }
         // 티어 점수로 티어 이름 찾기
         const tierObj = TIER_DATA.find(t => t.score === d.s) || { name: "Unknown" };
 
@@ -82,9 +85,9 @@ function importPlayerCode() {
         });
         cEl.value = ''; 
         saveAndRender();
-    } catch (e) { 
-        console.error(e);
-        alert('올바르지 않거나 손상된 코드입니다.'); 
+    } catch (err) {
+        console.error(err);
+        alert(err.message || '올바르지 않거나 손상된 코드입니다.');
     }
 }
 

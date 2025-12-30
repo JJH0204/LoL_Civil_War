@@ -67,11 +67,12 @@ function openModal(mode, id = null) {
         editingId = null;
         if (title) title.innerText = "새 참가자 등록";
         setVal('pName', '');
-        setVal('pTierCombined', '');
-        setVal('pTargetPos', '');
-        setVal('pSubPos', '');
-        setVal('pMainPos', '');
-        setVal('pAvoidPos', '');
+        // 기본값: 티어=골드 4, 1지망=탑, 2지망=정글, 본캐=미드, 기피=없음
+        setVal('pTierCombined', '700'); // 골드 4
+        setVal('pTargetPos', 'TOP');
+        setVal('pSubPos', 'JUG');
+        setVal('pMainPos', 'MID');
+        setVal('pAvoidPos', 'NONE');
         setTempSelectedChamps([]);
         renderSelectedChampsPreview();
     } else {
@@ -189,23 +190,23 @@ function savePlayer() {
     };
 
     if (editingId) {
-        const oldP = players.find(p => p.id === editingId);
+        const oldP = window.players.find(p => Number(p.id) === Number(editingId));
         if (oldP && oldP.duoId && oldP.duoId !== selectedDuoId) {
-            const oldPartner = players.find(p => p.id === oldP.duoId);
+            const oldPartner = window.players.find(p => Number(p.id) === Number(oldP.duoId));
             if (oldPartner) oldPartner.duoId = null;
         }
-        const idx = players.findIndex(p => p.id === editingId);
-        if (idx !== -1) players[idx] = newPlayer;
+        const idx = window.players.findIndex(p => Number(p.id) === Number(editingId));
+        if (idx !== -1) window.players[idx] = newPlayer;
     } else {
-        if (players.length >= 10) return alert("최대 10명입니다.");
-        players.push(newPlayer);
+        if (window.players.length >= 10) return alert("최대 10명입니다.");
+        window.players.push(newPlayer);
     }
 
     if (selectedDuoId) {
-        const partner = players.find(p => p.id === selectedDuoId);
+        const partner = window.players.find(p => p.id === selectedDuoId);
         if (partner) {
             if (partner.duoId && partner.duoId !== newPlayer.id) {
-                const thirdWheel = players.find(p => p.id === partner.duoId);
+                const thirdWheel = window.players.find(p => p.id === partner.duoId);
                 if (thirdWheel) thirdWheel.duoId = null;
             }
             partner.duoId = newPlayer.id;
@@ -232,7 +233,7 @@ function getDuoColor(p) {
 
 // 참가자 목록 반환
 function getParticipants() {
-    return players;
+    return window.players;
 }
 
 // 전역 등록
@@ -243,7 +244,10 @@ window.toggleChampSelection = toggleChampSelection;
 window.updateChampGridSelection = updateChampGridSelection;
 window.updateChampCount = updateChampCount;
 window.confirmChampSelect = confirmChampSelect;
-window.savePlayer = savePlayer;
+// 항상 window에 등록 (중복 안전)
+if (typeof window !== 'undefined') {
+    window.savePlayer = savePlayer;
+}
 window.removePlayer = removePlayer;
 window.getDuoColor = getDuoColor;
 window.getParticipants = getParticipants;

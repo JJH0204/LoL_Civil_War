@@ -599,16 +599,32 @@ input[type="text"], select {
   display: flex !important;
 }
 #aiModal .modal-content {
-  background: #181818;
-  margin: auto;
-  padding: 30px 24px 24px 24px;
-  border-radius: 12px;
-  border: 1.5px solid #333;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  color: #eee;
-  min-width: 320px;
-  max-width: 95vw;
-  position: relative;
+    background: #181818;
+    margin: auto;
+    padding: 30px 24px 24px 24px;
+    border-radius: 12px;
+    border: 1.5px solid #333;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    color: #eee;
+    min-width: 320px;
+    max-width: 95vw;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+}
+
+#aiResultScrollArea {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 10px;
+    min-height: 120px;
+}
+
+#aiResultCopyRow {
+    margin-top: 18px;
+    text-align: right;
+}
 }
 #aiModal .close-btn {
   position: absolute;

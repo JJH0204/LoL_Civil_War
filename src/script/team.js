@@ -7,7 +7,11 @@ function calculateAndAssign() {
     window.LANES.forEach(l => { blueSlots[l] = null; redSlots[l] = null; });
     let blueTeam = [], redTeam = [];
 
-    let sorted = [...window.players].sort((a, b) => b.baseScore - a.baseScore || a.name.localeCompare(b.name));
+    let sorted = [...window.players].sort((a, b) => {
+        if (b.baseScore !== a.baseScore) return b.baseScore - a.baseScore;
+        // 동점자 무작위 처리
+        return Math.random() < 0.5 ? -1 : 1;
+    });
     let unassigned = [...sorted];
 
     unassigned = attemptAssign(unassigned, '1ST', blueSlots, redSlots, blueTeam, redTeam, 1.0);
@@ -87,7 +91,11 @@ function isAssignedInSlots(pid, bSlots, rSlots, singleTeamSlots = null) {
 
 function sortForNextRound(queue, ratio) {
     return queue.map(p => ({ ...p, tempScore: Math.round(p.baseScore * ratio) }))
-        .sort((a, b) => b.tempScore - a.tempScore || a.name.localeCompare(b.name));
+        .sort((a, b) => {
+            if (b.tempScore !== a.tempScore) return b.tempScore - a.tempScore;
+            // 동점자 무작위 처리
+            return Math.random() < 0.5 ? -1 : 1;
+        });
 }
 
 function attemptAssign(queue, mode, bSlots, rSlots, bTeam, rTeam, ratio) {

@@ -158,12 +158,8 @@ async function analyzeGameAI() {
 
 // 분석 결과 + 디스코드 공유 버튼 렌더링
 function renderAiResultWithShare(contentEl, aiText) {
-    contentEl.innerHTML = marked.parse(aiText) +
-        `<div style="margin-top:24px; text-align:right;">
-            <button id="btnCopyAiResult" class="btn-icon" style="background:#5865F2; color:#fff; font-weight:bold; border:none; padding:10px 18px; border-radius:6px; font-size:1rem;">
-                📋 디스코드로 공유(텍스트 복사)
-            </button>
-        </div>`;
+    contentEl.innerHTML = marked.parse(aiText);
+    // 복사 버튼은 모달 하단에 항상 고정된 영역에 있음
     const btn = document.getElementById('btnCopyAiResult');
     if (btn) {
         btn.onclick = function() {
