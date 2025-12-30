@@ -959,3 +959,76 @@ function openOpggMulti() {
     if(!players.length) return alert("플레이어 없음");
     window.open(`https://www.op.gg/multisearch/kr?summoners=${encodeURIComponent(players.map(p=>p.name).join(','))}`, '_blank');
 }
+
+async function analyzeGameAI() {
+    if (!lastBlueSlots || !lastRedSlots) return alert("먼저 팀 배정을 완료해주세요.");
+    const apiKey = (AI_PROVIDER === 'gemini') ? GEMINI_API_KEY : OPENAI_API_KEY;
+    if (!apiKey) { alert("API Key가 없습니다. 설정에서 입력해주세요."); openSettings(); return; }
+
+    const modal = document.getElementById('aiModal');
+    const loading = document.getElementById('aiLoading');
+    const content = document.getElementById('aiResultContent');
+    modal.style.display = 'block'; loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = '';
+
+    const prompt = createAiPrompt();
+    try {
+        let aiText = "";
+        if (AI_PROVIDER === 'gemini') aiText = await fetchGeminiResponse(apiKey, prompt);
+        else aiText = await fetchOpenAIResponse(apiKey, prompt);
+        loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = marked.parse(aiText);
+    } catch (error) {
+        loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = `<p style="color: #e74c3c;">⚠️ 오류: ${error.message}</p>`;
+    }
+}
+
+function createAiPrompt() {
+    const system = '당신은 LoL 전문 해설가입니다. 분석적이고 위트 있게 게임 양상을 예측해주세요.';
+    let user = `[블루팀]\n`;
+    LANES.forEach(l => {
+        const p = lastBlueSlots[l];
+        const c = p.champ && p.champ.length ? p.champ.map(id => getChampName(id)).join(',') : '모름';
+        user += `- ${LANE_NAMES[l]}: ${p.name} (${p.tierName}) [${c}]\n`;
+    });
+    user += `\n[레드팀]\n`;
+    LANES.forEach(l => {
+        const p = lastRedSlots[l];
+        const c = p.champ && p.champ.length ? p.champ.map(id => getChampName(id)).join(',') : '모름';
+        user += `- ${LANE_NAMES[l]}: ${p.name} (${p.tierName}) [${c}]\n`;
+    });
+    return AI_PROVIDER === 'gemini'
+        ? `${system}\n\n${user}\n\n분석 항목: 1.🔥격전지 2.⚖️양상 3.👑승리플랜 4.🎙️한줄평`
+        : user + '\n항목: 1.🔥격전지 2.⚖️양상 3.👑승리플랜 4.🎙️한줄평';
+}
+
+async function fetchOpenAIResponse(key, userPrompt) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: '당신은 LoL 전문 해설가입니다.' },
+                { role: 'user', content: userPrompt }
+            ],
+            max_tokens: 600
+        })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices[0].message.content;
+}
+
+async function fetchGeminiResponse(key, prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '분석 실패';
+}
