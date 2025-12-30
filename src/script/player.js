@@ -1,4 +1,7 @@
-let players = [];
+var players = [];
+if (typeof window !== 'undefined') {
+    window.players = players;
+}
 let editingId = null;
 let tempSelectedChamps = [];
 
