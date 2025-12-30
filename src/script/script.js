@@ -1,5 +1,18 @@
+import '../style.css'
+import './championList.js';
+import './opgg.js';
+import './player.js';
+import './common.js';
+import './ai.js';
+import './file.js';
+import './swapPlayer.js';
+import './team.js';
+import './gemini.js';
+
 let IS_DUO_ACTIVE = true;
-let tempSelectedChamps = [];
+// let tempSelectedChamps = []; // 중복 선언 방지: 이미 다른 파일에서 선언됨
+
+// const safeChampionList = (typeof championList !== 'undefined') ? championList : []; // championList가 정의되지 않아 발생하는 ReferenceError 해결
 
 // [초기화] URL 파라미터 확인 및 데이터 로드
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,7 +88,7 @@ function initChampGrid() {
     if (!grid) return;
 
     grid.innerHTML = '';
-    safeChampionList.forEach(champ => {
+    window.championList.forEach(champ => {
         const div = document.createElement('div');
         div.className = 'champ-item';
         div.setAttribute('data-id', champ.id);
@@ -111,7 +124,10 @@ function showModal(id) {
 function openSettings() {
     const el = document.getElementById('settingsModal');
     if (el) el.style.display = 'block';
+    const providerSel = document.getElementById('aiProviderSelect');
+    if (providerSel) window.toggleAiInput(providerSel.value);
 }
+window.openSettings = openSettings;
 
 function openChampModal() {
     const el = document.getElementById('champModal');

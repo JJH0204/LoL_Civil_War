@@ -1,15 +1,13 @@
-
-// 팀 밸런싱/결과 렌더링 관련 데이터 및 함수
 let lastBlueSlots = null, lastRedSlots = null;
 
 function calculateAndAssign() {
-    if (window.players.length < 2) return alert("최소 2명");
+    if (getParticipants().length < 2) return alert("최소 2명");
 
     let blueSlots = {}, redSlots = {};
     window.LANES.forEach(l => { blueSlots[l] = null; redSlots[l] = null; });
     let blueTeam = [], redTeam = [];
 
-    let sorted = [...window.players].sort((a, b) => b.baseScore - a.baseScore || a.name.localeCompare(b.name));
+    let sorted = [...getParticipants()].sort((a, b) => b.baseScore - a.baseScore || a.name.localeCompare(b.name));
     let unassigned = [...sorted];
 
     unassigned = attemptAssign(unassigned, '1ST', blueSlots, redSlots, blueTeam, redTeam, 1.0);
@@ -61,7 +59,7 @@ function calculateAndAssign() {
 function handleDuo(p, teamSlots, teamList, bSlots, rSlots) {
     if (!window.IS_DUO_ACTIVE || !p.duoId) return false;
 
-    const partner = window.players.find(x => x.id === p.duoId);
+    const partner = getParticipants().find(x => x.id === p.duoId);
     if (!partner || isAssignedInSlots(partner.id, bSlots, rSlots)) return false;
 
     if (teamList.length >= 5) return false;

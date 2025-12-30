@@ -38,14 +38,14 @@ function createAiPrompt() {
     let user = `[블루팀]\n`;
     LANES.forEach(l => {
         const p = lastBlueSlots[l];
-        const c = p.champ && p.champ.length ? p.champ.map(id => getChampName(id)).join(',') : '모름';
-        user += `- ${LANE_NAMES[l]}: ${p.name} (${p.tierName}) [${c}]\n`;
+        const c = (p && p.champ && p.champ.length) ? p.champ.map(id => getChampName(id)).join(',') : '모름';
+        user += `- ${LANE_NAMES[l]}: ${p ? p.name : '비어있음'} (${p ? p.tierName : '-'}) [${c}]\n`;
     });
     user += `\n[레드팀]\n`;
     LANES.forEach(l => {
         const p = lastRedSlots[l];
-        const c = p.champ && p.champ.length ? p.champ.map(id => getChampName(id)).join(',') : '모름';
-        user += `- ${LANE_NAMES[l]}: ${p.name} (${p.tierName}) [${c}]\n`;
+        const c = (p && p.champ && p.champ.length) ? p.champ.map(id => getChampName(id)).join(',') : '모름';
+        user += `- ${LANE_NAMES[l]}: ${p ? p.name : '비어있음'} (${p ? p.tierName : '-'}) [${c}]\n`;
     });
     return AI_PROVIDER === 'gemini'
         ? `${system}\n\n${user}\n\n분석 항목: 1.🔥격전지 2.⚖️양상 3.👑승리플랜 4.🎙️한줄평`
@@ -74,17 +74,34 @@ async function fetchOpenAIResponse(key, userPrompt) {
     return data.choices[0].message.content;
 }
 
-// Gemini API 호출
+// Gemini API 호출 (공식 SDK 예제 스타일 반영, gemini-3-flash-preview)
 async function fetchGeminiResponse(key, prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    // GoogleGenAI SDK 없이 REST API로 최대한 유사하게 구현
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+    const body = {
+        contents: [
+            {
+                role: "user",
+                parts: [ { text: prompt } ]
+            }
+        ]
+    };
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify(body)
     });
     const data = await res.json();
+    // 공식 SDK 예제와 동일하게 응답 파싱
+    if (data.response && data.response.candidates && data.response.candidates[0]?.content?.parts[0]?.text) {
+        return data.response.candidates[0].content.parts[0].text;
+    }
+    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+    }
+    if (data.text) return data.text;
     if (data.error) throw new Error(data.error.message);
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '분석 실패';
+    return '분석 실패';
 }
 
 // AI 분석 메인 함수
@@ -118,8 +135,21 @@ async function analyzeGameAI() {
     }
 }
 
+function toggleAiInput(val) {
+    const openaiArea = document.getElementById('openaiKeyArea');
+    const geminiArea = document.getElementById('geminiKeyArea');
+    if (val === 'openai') {
+        if (openaiArea) openaiArea.style.display = '';
+        if (geminiArea) geminiArea.style.display = 'none';
+    } else if (val === 'gemini') {
+        if (openaiArea) openaiArea.style.display = 'none';
+        if (geminiArea) geminiArea.style.display = '';
+    }
+}
+
 window.analyzeGameAI = analyzeGameAI;
 window.createAiPrompt = createAiPrompt;
 window.fetchOpenAIResponse = fetchOpenAIResponse;
 window.fetchGeminiResponse = fetchGeminiResponse;
 window.saveApiKeys = saveApiKeys;
+window.toggleAiInput = toggleAiInput;

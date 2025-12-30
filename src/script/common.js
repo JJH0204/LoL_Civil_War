@@ -143,6 +143,12 @@ function copyResultImage() {
     }
 }
 
+function playSound(name) {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.5;
+    audio.play();
+}
+
 // 전역 등록
 window.LANES = LANES;
 window.LANE_NAMES = LANE_NAMES;
@@ -153,6 +159,7 @@ window.getChampName = getChampName;
 window.generateModalCode = generateModalCode;
 window.importPlayerCode = importPlayerCode;
 window.copyResultImage = copyResultImage;
+window.playSound = playSound;
 
 if (championList !== 'undefined') {
     window.championList = championList;
