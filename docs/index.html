@@ -11,7 +11,7 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="module" crossorigin src="/LoL_Civil_War/lol-civil-war.bundle.js"></script>
-  <link rel="stylesheet" crossorigin href="/LoL_Civil_War/assets/index.CHSbOnLo.css">
+  <link rel="stylesheet" crossorigin href="/LoL_Civil_War/assets/index.CuzM1SxB.css">
 </head>
 
 <body>
@@ -192,15 +192,23 @@
 
     <!-- AI 분석 결과 모달 -->
     <div id="aiModal" class="modal">
-        <div class="modal-content" style="max-width:600px; min-height:220px;">
+        <div class="modal-content"
+            style="max-width:600px; min-height:220px; display:flex; flex-direction:column; height:70vh;">
             <span class="close-btn" onclick="closeModal('aiModal')">&times;</span>
             <h2>🤖 AI 전력 분석 결과</h2>
             <div id="aiLoading"
                 style="display:none; text-align:center; padding:30px 0; color:#0ac8b9; font-size:1.2rem;">
                 <span class="loader" style="margin-right:10px;"></span>AI가 분석 중입니다...
             </div>
-            <div id="aiResultContent" style="min-height:120px; margin-top:10px;"></div>
-
+            <div id="aiResultScrollArea" style="flex:1; overflow-y:auto; margin-top:10px; min-height:120px;">
+                <div id="aiResultContent"></div>
+            </div>
+            <div id="aiResultCopyRow" style="margin-top:18px; text-align:right;">
+                <button id="btnCopyAiResult" class="btn-icon"
+                    style="background:#5865F2; color:#fff; font-weight:bold; border:none; padding:10px 18px; border-radius:6px; font-size:1rem;">
+                    📋 디스코드로 공유(텍스트 복사)
+                </button>
+            </div>
         </div>
     </div>
 </body>
