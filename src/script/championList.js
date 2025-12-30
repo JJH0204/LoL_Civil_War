@@ -689,3 +689,6 @@ const championList = [
         "name": "자이라"
     }
 ];
+if (typeof window !== 'undefined') {
+  window.championList = championList;
+}
