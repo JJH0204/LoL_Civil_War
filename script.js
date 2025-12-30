@@ -357,6 +357,45 @@ function getChampName(id) {
     return c ? c.name : id;
 }
 
+// 드래그 앤 드롭 핸들러
+function handleDragStart(e, t, l) {
+    e.dataTransfer.setData('text/plain', JSON.stringify({ t, l }));
+    e.target.closest('.role-row').classList.add('dragging');
+}
+function handleDragEnd(e) {
+    e.target.closest('.role-row').classList.remove('dragging');
+}
+function handleDragOver(e) {
+    e.preventDefault();
+    e.target.closest('.role-row')?.classList.add('drag-over');
+}
+function handleDragLeave(e) {
+    e.target.closest('.role-row')?.classList.remove('drag-over');
+}
+function handleDrop(e, tgtTeam) {
+    e.preventDefault();
+    e.target.closest('.role-row')?.classList.remove('drag-over');
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    if (!data) return;
+    let row = e.target.closest('.role-row');
+    let tgtLane = row ? Object.keys(LANE_NAMES).find(k => LANE_NAMES[k] === row.querySelector('.role-icon div').innerText) : null;
+    if (data.t === tgtTeam && data.l === tgtLane) return;
+    swapPlayers(data.t, data.l, tgtTeam, tgtLane);
+}
+function swapPlayers(st, sl, tt, tl) {
+    const sSlots = st === 'BLUE' ? lastBlueSlots : lastRedSlots;
+    const tSlots = tt === 'BLUE' ? lastBlueSlots : lastRedSlots;
+    const sp = sSlots[sl];
+    const tp = tSlots[tl];
+    sSlots[sl] = tp;
+    tSlots[tl] = sp;
+    if (sp) sp.assignedLane = tl;
+    if (tp) tp.assignedLane = sl;
+    renderTR('blueList', 'blueScoreDisp', lastBlueSlots, 'BLUE');
+    renderTR('redList', 'redScoreDisp', lastRedSlots, 'RED');
+    if (typeof playSound === 'function') playSound('pick');
+}
+
 function renderList() {
     const list = document.getElementById('playerList');
     if (!list) return;
@@ -441,8 +480,8 @@ function calculateAndAssign() {
         }
     });
 
-    renderTeamResult('blueList', 'blueScoreDisp', blueSlots);
-    renderTeamResult('redList', 'redScoreDisp', redSlots);
+    renderTR('blueList', 'blueScoreDisp', blueSlots);
+    renderTR('redList', 'redScoreDisp', redSlots);
     findAce(blueSlots); findAce(redSlots);
     analyzeGap(blueSlots, redSlots);
 
@@ -624,71 +663,25 @@ function analyzeGap(bSlots, rSlots) {
     });
 }
 
-function renderTeamResult(listId, scoreDispId, slots) {
-    const el = document.getElementById(listId);
-    if (!el) return;
 
-    let totalWeighted = 0;
-    el.innerHTML = '';
-
-    LANES.forEach(lane => {
-        const p = slots[lane];
-        let laneClass = 'lane-' + lane.toLowerCase();
-
-        if (p) {
-            totalWeighted += (p.finalScore * LANE_WEIGHTS[lane]);
-
-            let isDuoTogether = false;
-            let duoColor = '';
-            if (IS_DUO_ACTIVE && p.duoId) {
-                isDuoTogether = Object.values(slots).some(teammate => teammate && teammate.id === p.duoId);
-                if (isDuoTogether) duoColor = getDuoColor(p);
-            }
-
-            let badge = '';
-            if (isDuoTogether) {
-                badge = `<span class="pref-badge" style="background:${duoColor}; color:#000;">🔗 듀오</span>`;
-            } else {
-                if (p.assignType === '1ST') badge = '<span class="pref-badge pref-1st">1지망</span>';
-                else if (p.assignType === '1ST_RAND') badge = '<span class="pref-badge pref-1st">1지망(랜덤)</span>';
-                else if (p.assignType === '2ND') badge = '<span class="pref-badge pref-2nd">2지망</span>';
-                else if (p.assignType === '2ND_RAND') badge = '<span class="pref-badge pref-2nd">2지망(랜덤)</span>';
-                else if (p.assignType === 'MAIN') badge = '<span class="pref-badge pref-main">본캐</span>';
-                else if (p.assignType === 'FORCE') badge = '<span class="pref-badge pref-force">강제</span>';
-                else badge = '<span class="pref-badge pref-auto">오토필</span>';
-            }
-
-            if (p.isUnderdog) badge += ` <span class="pref-badge gap-warning">⚠️ 열세</span>`;
-            if (p.isAce) badge += ` <span class="ace-badge">👑 ACE</span>`;
-
-            let champHtml = '';
-            if (Array.isArray(p.champ) && p.champ.length > 0) {
-                champHtml = `<div class="result-champ-container">`;
-                p.champ.slice(0, 10).forEach(id => {
-                    const cName = getChampName(id);
-                    champHtml += `<img src="champion_images/${id}.png" class="result-champ-icon" title="${cName}" alt="${cName}">`;
-                });
-                champHtml += '</div>';
-            }
-
-            el.innerHTML += `
-            <div class="role-row" onclick="this.classList.toggle('active')">
-                <div class="role-icon ${laneClass}"><div>${LANE_NAMES[lane]}</div></div>
-                <div class="player-detail-col">
-                    <span class="player-name">${p.name} ${badge}</span>
-                    <div style="font-size:0.8rem; color:#888;">
-                        ${p.tierName} (${LANE_NAMES[p.targetPos]})
-                    </div>
-                    ${champHtml}
-                </div>
-            </div>`;
-        } else {
-            el.innerHTML += `<div class="role-row" style="opacity:0.3;"><div class="role-icon ${laneClass}"><div>${LANE_NAMES[lane]}</div></div><div style="flex:1;"><span>(비어있음)</span></div></div>`;
-        }
+// 개선된 팀 라인업 렌더링 함수 (드래그 앤 드롭 지원)
+function renderTR(lid, sid, slots, tStr) {
+    const el = document.getElementById(lid); let total=0; el.innerHTML='';
+    LANES.forEach(l => {
+        const p = slots[l];
+        let h = `<div class="role-row" draggable="true" ondragstart="handleDragStart(event,'${tStr}','${l}')" ondragend="handleDragEnd(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${tStr}')" onclick="this.classList.toggle('active')">`;
+        if(p) {
+            total += p.finalScore * LANE_WEIGHTS[l];
+            let b = '';
+            if(IS_DUO_ACTIVE && p.duoId && Object.values(slots).some(teammate=>teammate&&teammate.id===p.duoId)) b=`<span class="pref-badge" style="background:${getDuoColor(p)}">🔗 듀오</span>`;
+            else b=`<span class="pref-badge pref-${p.assignType.toLowerCase().split('_')[0]}">${p.assignType}</span>`;
+            if(p.isAce) b+=' <span class="ace-badge">👑 ACE</span>';
+            if(p.isUnderdog) b+=' <span class="pref-badge gap-warning">⚠️ 열세</span>';
+            let c=''; if(p.champ?.length) { c='<div class="result-champ-container">'; p.champ.slice(0,10).forEach(id=>c+=`<img src="champion_images/${id}.png" class="result-champ-icon" title="${getChampName(id)}">`); c+='</div>'; }
+            h += `<div class="role-icon lane-${l.toLowerCase()}"><div>${LANE_NAMES[l]}</div></div><div class="player-detail-col"><span class="player-name">${p.name} ${b}</span><div style="font-size:0.8rem; color:#888;">${p.tierName} (${LANE_NAMES[p.targetPos]})</div>${c}</div></div>`;
+        } else { h += `<div class="role-icon lane-${l.toLowerCase()}"><div>${LANE_NAMES[l]}</div></div><div style="flex:1;">(비어있음)</div></div>`; }
+        el.innerHTML+=h;
     });
-
-    // const scoreEl = document.getElementById(scoreDispId);
-    // if (scoreEl) scoreEl.innerText = "종합 전투력: " + Math.round(totalWeighted);
 }
 
 function saveAndRender() { localStorage.setItem('lol_cw_v20_8', JSON.stringify(players)); renderList(); }
@@ -903,4 +896,58 @@ function importPlayerCode() {
         console.error(e);
         alert('올바르지 않거나 손상된 코드입니다.'); 
     }
+}
+
+// 개선된 밸런싱 및 결과 표시 로직
+let lastBlueSlots = null, lastRedSlots = null;
+// 최신 calculateAndAssign 함수만 유지 (renderTR 사용)
+function calculateAndAssign() {
+    if (players.length < 2) return alert("최소 2명");
+    let blueSlots = {}, redSlots = {}; LANES.forEach(l => { blueSlots[l] = null; redSlots[l] = null; });
+    let blueTeam = [], redTeam = [];
+
+    let sorted = [...players].sort((a, b) => b.baseScore - a.baseScore || a.name.localeCompare(b.name));
+    let unassigned = [...sorted];
+
+    unassigned = attemptAssign(unassigned, '1ST', blueSlots, redSlots, blueTeam, redTeam, 1.0);
+    unassigned = sortForNextRound(unassigned, 0.9);
+    unassigned = attemptAssign(unassigned, '2ND', blueSlots, redSlots, blueTeam, redTeam, 0.9);
+    unassigned = sortForNextRound(unassigned, 0.95);
+    unassigned = attemptAssign(unassigned, 'MAIN', blueSlots, redSlots, blueTeam, redTeam, 0.95);
+    unassigned = sortForNextRound(unassigned, 0.7);
+
+    unassigned.forEach(p => {
+        if (isAssignedInSlots(p.id, blueSlots, redSlots)) return;
+
+        let candidates = [];
+        let myPower = Math.round(p.baseScore * 0.7);
+        if (blueTeam.length < 5) scanSlots(blueSlots, 'BLUE', candidates, myPower, redSlots, p.avoidPos);
+        if (redTeam.length < 5) scanSlots(redSlots, 'RED', candidates, myPower, blueSlots, p.avoidPos);
+        candidates.sort((a, b) => a.gap - b.gap);
+
+        if (candidates.length > 0) {
+            let best = candidates[0];
+            let targetSlots = (best.team === 'BLUE') ? blueSlots : redSlots;
+            let targetTeam = (best.team === 'BLUE') ? blueTeam : redTeam;
+
+            if (assignTo(targetSlots, targetTeam, best.lane, p, 'AUTO', 0.7)) {
+                if (IS_DUO_ACTIVE) handleDuo(p, targetSlots, targetTeam, blueSlots, redSlots);
+            }
+        } else {
+            forceAssign(p, blueSlots, redSlots, blueTeam, redTeam);
+        }
+    });
+
+    lastBlueSlots = blueSlots; lastRedSlots = redSlots;
+    findAce(blueSlots); findAce(redSlots);
+    analyzeGap(blueSlots, redSlots);
+    renderTR('blueList', 'blueScoreDisp', blueSlots, 'BLUE');
+    renderTR('redList', 'redScoreDisp', redSlots, 'RED');
+    const rArea = document.getElementById('resultArea');
+    if (rArea) {
+        rArea.style.display = 'flex';
+        setTimeout(() => rArea.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+    const shareSec = document.getElementById('shareSection');
+    if (shareSec) shareSec.style.display = 'flex';
 }

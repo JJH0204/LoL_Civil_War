@@ -49,7 +49,6 @@
         <div class="import-box" style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
             <input type="text" id="importCode" placeholder="공유 코드 붙여넣기..." style="flex:2; background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
             <button class="btn-icon" onclick="importPlayerCode()" style="flex:1; background: #333; color: white; border:1px solid #555;">📥 추가</button>
-            <!-- <button class="btn-icon" onclick="generateModalCode()" style="flex:1; background: #444; color: #ccc; border: 1px solid #555;">📤 코드 생성</button> -->
         </div>
 
         <button class="btn-calc" onclick="calculateAndAssign(); playSound('click');">⚖️ 정밀 밸런싱 시작</button>
@@ -58,7 +57,6 @@
             <button class="btn-ai-analyze" onclick="analyzeGameAI(); playSound('click');">
                 🤖 AI 전력 분석 및 승부 예측
             </button>
-
             <div class="team blue">
                 <div class="team-header">
                     <h3 style="color: #5dade2;">BLUE TEAM</h3>
@@ -91,7 +89,7 @@
             <span class="close-btn" onclick="closeModal('playerModal')">&times;</span>
             <h2 id="modalTitle">참가자 등록</h2>
             <div class="input-row">
-                <div style="flex:2"><span class="label">소환사명</span><input type="text" id="pName" placeholder="이름"></div>
+                <div style="flex:2"><span class="label">소환사명</span><input type="text" id="pName" placeholder="예: Summoner#1234"></div>
                 <div style="flex:1.5"><span class="label">티어 (통합)</span><select id="pTierCombined"></select></div>
             </div>
             <div class="input-row">
