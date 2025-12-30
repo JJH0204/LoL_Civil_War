@@ -3,19 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoL Civil War</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="src/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="championList.js" onerror="console.warn('championList.js 로드 실패. 기본값 사용.')"></script>
-    <script src="script.js" defer></script>
+    <script type="module" src="src/script/script.js"></script>
 </head>
 
 <body>
-
     <div class="container">
         <div class="top-bar">
             <h1>⚔️ LoL Civil War</h1>
@@ -199,6 +198,7 @@
                 <span class="loader" style="margin-right:10px;"></span>AI가 분석 중입니다...
             </div>
             <div id="aiResultContent" style="min-height:120px; margin-top:10px;"></div>
+
         </div>
     </div>
 </body>
