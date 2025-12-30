@@ -1,4 +1,3 @@
-
 .btn-ai-analyze {
     background: linear-gradient(90deg, #0ac8b9 0%, #6c5ce7 100%);
     color: #fff;
@@ -560,4 +559,60 @@ input[type="text"], select {
     border-radius: 4px;
     cursor: pointer;
     margin-left: 10px;
+}
+
+/* AI 분석 결과 모달 */
+#aiModal {
+  display: none;
+  position: fixed;
+  z-index: 3000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.55);
+  justify-content: center;
+  align-items: center;
+}
+#aiModal.show {
+  display: flex !important;
+}
+#aiModal .modal-content {
+  background: #181818;
+  margin: auto;
+  padding: 30px 24px 24px 24px;
+  border-radius: 12px;
+  border: 1.5px solid #333;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  color: #eee;
+  min-width: 320px;
+  max-width: 95vw;
+  position: relative;
+}
+#aiModal .close-btn {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+}
+#aiModal .close-btn:hover {
+  color: #e74c3c;
+}
+#aiLoading .loader {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  border: 3px solid #0ac8b9;
+  border-radius: 50%;
+  border-top: 3px solid transparent;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

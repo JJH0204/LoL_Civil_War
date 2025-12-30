@@ -188,9 +188,19 @@ function openModal(mode, id = null) {
     modal.style.display = 'block';
 }
 
+function showModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add('show');
+    }
+}
+
 function closeModal(id) {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
+    if (el) {
+        el.classList.remove('show');
+        el.style.display = '';
+    }
 }
 
 function openSettings() {
@@ -480,11 +490,11 @@ function calculateAndAssign() {
         }
     });
 
-    renderTR('blueList', 'blueScoreDisp', blueSlots);
-    renderTR('redList', 'redScoreDisp', redSlots);
+    lastBlueSlots = blueSlots; lastRedSlots = redSlots;
     findAce(blueSlots); findAce(redSlots);
     analyzeGap(blueSlots, redSlots);
-
+    renderTR('blueList', 'blueScoreDisp', blueSlots, 'BLUE');
+    renderTR('redList', 'redScoreDisp', redSlots, 'RED');
     const rArea = document.getElementById('resultArea');
     if (rArea) {
         rArea.style.display = 'flex';
@@ -492,6 +502,9 @@ function calculateAndAssign() {
     }
     const shareSec = document.getElementById('shareSection');
     if (shareSec) shareSec.style.display = 'flex';
+
+    const aiAnalyzeSec = document.getElementById('aiAnalyzeSection');
+    if (aiAnalyzeSec) aiAnalyzeSec.style.display = 'flex';
 }
 
 function handleDuo(p, teamSlots, teamList, bSlots, rSlots) {
@@ -968,7 +981,7 @@ async function analyzeGameAI() {
     const modal = document.getElementById('aiModal');
     const loading = document.getElementById('aiLoading');
     const content = document.getElementById('aiResultContent');
-    modal.style.display = 'block'; loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = '';
+    showModal('aiModal'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = '';
 
     const prompt = createAiPrompt();
     try {
