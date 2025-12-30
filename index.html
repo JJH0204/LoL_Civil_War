@@ -9,6 +9,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="championList.js" onerror="console.warn('championList.js 로드 실패. 기본값 사용.')"></script>
     <script src="script.js" defer></script>
 </head>
@@ -18,7 +19,7 @@
     <div class="container">
         <div class="top-bar">
             <h1>⚔️ LoL Civil War</h1>
-            <button class="btn-icon" onclick="openSettings()">⚙️ 설정</button>
+            <button class="btn-icon" onclick="openSettings(); playSound('click');">⚙️ 설정</button>
         </div>
 
         <div class="top-bar">
@@ -26,12 +27,11 @@
                 <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(this)">
 
                 <button class="btn-icon" style="background:#27ae60; border-color:#2ecc71;"
-                    onclick="document.getElementById('fileInput').click()">
-                    📂 로스터 불러오기
-                </button>
-                <button class="btn-icon" style="background:#2980b9; border-color:#3498db;" onclick="saveRosterToFile()">
-                    💾 로스터 저장
-                </button>
+                    onclick="document.getElementById('fileInput').click(); playSound('click');">📂 불러오기</button>
+                <button class="btn-icon" style="background:#2980b9; border-color:#3498db;"
+                    onclick="saveRosterToFile(); playSound('click');">💾 저장</button>
+                <button class="btn-icon" style="background:#5352ed; border-color:#70a1ff;"
+                    onclick="openOpggMulti(); playSound('click');">🔍 OP.GG</button>
             </div>
 
             <div id="playerCount" style="color: #888; font-size: 0.9rem;">0 / 10 명</div>
@@ -39,7 +39,7 @@
                 onclick="resetAll()">🗑️</button> -->
         </div>
 
-        <button class="btn-main-add" onclick="openModal('new')">
+        <button class="btn-main-add" onclick="openModal('new'); playSound('click');">
             참가자 추가 / 코드 생성
         </button>
 
@@ -52,9 +52,13 @@
             <!-- <button class="btn-icon" onclick="generateModalCode()" style="flex:1; background: #444; color: #ccc; border: 1px solid #555;">📤 코드 생성</button> -->
         </div>
 
-        <button class="btn-calc" onclick="calculateAndAssign()">⚖️ 정밀 밸런싱 시작</button>
+        <button class="btn-calc" onclick="calculateAndAssign(); playSound('click');">⚖️ 정밀 밸런싱 시작</button>
 
         <div class="result-area" id="resultArea">
+            <button class="btn-ai-analyze" onclick="analyzeGameAI(); playSound('click');">
+                🤖 AI 전력 분석 및 승부 예측
+            </button>
+
             <div class="team blue">
                 <div class="team-header">
                     <h3 style="color: #5dade2;">BLUE TEAM</h3>
@@ -74,7 +78,7 @@
         <div id="shareSection" style="display:none; width:100%; margin-top:20px;">
             <button class="btn-icon" id="btnCapture"
                 style="background: #5865F2; width:100%; border:none; padding:15px; font-weight:bold; font-size: 1.1rem;"
-                onclick="copyResultImage()">
+                onclick="copyResultImage(); playSound('click');">
                 📸 결과 이미지 캡처 & 복사 (Ctrl+V)
             </button>
         </div>
@@ -135,8 +139,7 @@
                 <div id="champGrid" class="champ-grid"></div>
             </div>
             <div style="margin-top: 15px; text-align: right;">
-                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10
-                    선택됨</span>
+                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10 선택됨</span>
                 <button class="btn-save" style="width: auto; padding: 10px 30px;"
                     onclick="confirmChampSelect()">완료</button>
             </div>
@@ -147,19 +150,41 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
             <h2>⚙️ 게임 설정</h2>
+            
+            <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
+                <label class="label" style="color: var(--accent); font-weight:bold;">🤖 사용할 AI 모델 선택</label>
+                <select id="aiProviderSelect" onchange="toggleAiInput(this.value)" +
+                    style="margin-top:5px; margin-bottom:15px;">
+                    <option value="openai">OpenAI (GPT-4o-mini)</option>
+                    <option value="gemini">Google (Gemini 1.5 Flash)</option>
+                    </select>
+                
+                <div id="openaiKeyArea">
+                    <label class="label">🔑 OpenAI API Key</label>
+                    <input type="password" id="openaiKeyInput" placeholder="sk-..." onchange="saveApiKeys()">
+                    </div>
+                
+                <div id="geminiKeyArea" style="display:none;">
+                    <label class="label">🔑 Google Gemini API Key</label>
+                    <input type="password" id="geminiKeyInput" placeholder="AIza..." onchange="saveApiKeys()">
+                    <p style="font-size:0.7rem; color:#888; margin-top:5px;">
+                        Gemini API는 구글 AI Studio에서 무료로 발급 가능합니다.
+                        </p>
+                    </div>
+                </div>
+            
             <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
                 <label class="switch-container">
                     <span style="font-weight:bold; color:#e84393;">🔗 듀오 우선 배정 활성화</span>
                     <input type="checkbox" id="duoToggle" onchange="toggleDuoActive(this.checked)" checked>
                     <span class="checkmark"></span>
-                </label>
-                <p style="font-size:0.8rem; color:#888; margin-top:5px;">활성화 시 지정된 듀오를 같은 팀 1/2지망에 우선 배정합니다.</p>
-            </div>
-            <h3 style="margin-top:0;">메타 가중치 (결과 총점에만 반영)</h3>
+                    </label>
+                </div>
+            <h3 style="margin-top:0;">메타 가중치</h3>
             <div id="weightInputs"></div>
-            <button class="btn-save" onclick="closeModal('settingsModal')">닫기 및 적용</button>
+            <button class="btn-save" onclick="closeModal('settingsModal'); playSound('click');">닫기</button>
+            </div>
         </div>
-    </div>
 
 </body>
 
