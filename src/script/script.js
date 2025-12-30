@@ -146,6 +146,7 @@ function filterChampGrid() {
     if (!search) return;
     const keyword = search.value.toLowerCase();
     const items = document.querySelectorAll('.champ-item');
+
     items.forEach(item => {
         const name = item.getAttribute('data-name') || "";
         if (name.includes(keyword)) {
@@ -155,6 +156,9 @@ function filterChampGrid() {
         }
     });
 }
+
+// HTML에서 직접 호출할 수 있도록 window에 등록
+window.filterChampGrid = filterChampGrid;
 
 function renderList() {
     const list = document.getElementById('playerList');
