@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Civil War</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script type="module" crossorigin src="/LoL_Civil_War/lol-civil-war.bundle.js"></script>
+  <link rel="stylesheet" crossorigin href="/LoL_Civil_War/assets/index.C_lV5bCT.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <h1>⚔️ LoL Civil War</h1>
+            <button class="btn-icon" onclick="openSettings(); playSound('click');">⚙️ 설정</button>
+        </div>
+
+        <div class="top-bar">
+            <div class="file-controls">
+                <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(this)">
+
+                <button class="btn-icon" style="background:#27ae60; border-color:#2ecc71;"
+                    onclick="document.getElementById('fileInput').click(); playSound('click');">📂 불러오기</button>
+                <button class="btn-icon" style="background:#2980b9; border-color:#3498db;"
+                    onclick="saveRosterToFile(); playSound('click');">💾 저장</button>
+                <button class="btn-icon" style="background:#5352ed; border-color:#70a1ff;"
+                    onclick="openOpggMulti(); playSound('click');">🔍 OP.GG</button>
+            </div>
+
+            <div id="playerCount" style="color: #888; font-size: 0.9rem;">0 / 10 명</div>
+        </div>
+
+        <button class="btn-main-add" onclick="openModal('new'); playSound('click');">
+            참가자 추가 / 코드 생성
+        </button>
+
+        <div class="player-list" id="playerList"></div>
+
+
+        <div class="import-box" style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="importCode" placeholder="공유 코드 붙여넣기..."
+                style="flex:2; background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
+            <button class="btn-icon" onclick="importPlayerCode()"
+                style="flex:1; background: #333; color: white; border:1px solid #555;">📥 추가</button>
+        </div>
+
+        <button class="btn-calc" onclick="calculateAndAssign(); playSound('click');">⚖️ 정밀 밸런싱 시작</button>
+
+        <div class="result-area" id="resultArea">
+            <div class="team blue">
+                <div class="team-header">
+                    <h3 style="color: #5dade2;">BLUE TEAM</h3>
+                    <div class="score-display" id="blueScoreDisp"></div>
+                </div>
+                <div id="blueList"></div>
+            </div>
+            <div class="team red">
+                <div class="team-header">
+                    <h3 style="color: #ec7063;">RED TEAM</h3>
+                    <div class="score-display" id="redScoreDisp"></div>
+                </div>
+                <div id="redList"></div>
+            </div>
+        </div>
+
+        <div id="aiAnalyzeSection" style="display:none; width:100%; margin-top:20px;">
+            <button class="btn-ai-analyze" onclick="analyzeGameAI(); playSound('click');">🤖 AI 전력 분석 및 승부 예측</button>
+        </div>
+
+        <div id="shareSection" style="display:none; width:100%; margin-top:20px;">
+            <button class="btn-icon" id="btnCapture"
+                style="background: #5865F2; width:100%; border:none; padding:15px; font-weight:bold; font-size: 1.1rem;"
+                onclick="copyResultImage(); playSound('click');">
+                📸 결과 이미지 캡처 & 복사 (Ctrl+V)
+            </button>
+        </div>
+    </div>
+
+    <div class="release-info">Release v21.0</div>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('playerModal')">&times;</span>
+            <h2 id="modalTitle">참가자 등록</h2>
+            <div class="input-row">
+                <div style="flex:2"><span class="label">소환사명</span><input type="text" id="pName"
+                        placeholder="예: Summoner#1234"></div>
+                <div style="flex:1.5"><span class="label">티어 (통합)</span><select id="pTierCombined"></select></div>
+            </div>
+            <div class="input-row">
+                <div style="flex:1"><span class="label" style="color:#0ac8b9">1지망</span><select
+                        id="pTargetPos"></select></div>
+                <div style="flex:1"><span class="label" style="color:#f39c12">2지망</span><select id="pSubPos"></select>
+                </div>
+            </div>
+            <div class="input-row">
+                <div style="flex:1"><span class="label">본캐 주라인</span><select id="pMainPos"></select></div>
+                <div style="flex:1"><span class="label" style="color:#c0392b">기피 라인</span><select
+                        id="pAvoidPos"></select></div>
+            </div>
+            <div class="input-row" style="align-items: flex-start;">
+                <div id="champSelectionArea" style="flex:2; transition: flex 0.3s;">
+                    <span class="label">선호 챔피언 (최대 10개)</span>
+                    <div class="champ-select-box" onclick="openChampModal()">
+                        <div id="selectedChampPreview" style="display:flex; gap:5px; flex-wrap:wrap; min-height:24px;">
+                            <span style="color:#666; font-size:0.8rem; line-height:24px;">클릭하여 선택...</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="duoSelectionArea" style="flex:1; margin-left: 10px;">
+                    <span class="label" style="color:#e84393">🔗 듀오 설정</span>
+                    <select id="pDuoLink">
+                        <option value="">없음</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-save" onclick="savePlayer()">저장</button>
+            <button class="btn-share" onclick="generateModalCode()"
+                style="margin-top:10px; width:100%; background:#444; color:#ccc; border: 1px solid #555;">📤 코드
+                생성</button>
+        </div>
+    </div>
+
+    <div id="champModal" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 700px; height: 80vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">챔피언 선택</h2><span class="close-btn"
+                    onclick="closeModal('champModal')">&times;</span>
+            </div>
+            <input type="text" id="champSearch" placeholder="챔피언 검색 (예: 가, 가렌)" onkeyup="filterChampGrid()"
+                style="margin-bottom: 15px; padding: 12px;">
+            <div id="champGridWrapper"
+                style="flex:1; overflow-y: auto; background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #333;">
+                <div id="champGrid" class="champ-grid"></div>
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <span id="champCountDisplay" style="margin-right: 15px; color: var(--accent); font-weight: bold;">0 / 10
+                    선택됨</span>
+                <button class="btn-save" style="width: auto; padding: 10px 30px;"
+                    onclick="confirmChampSelect()">완료</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+            <h2>⚙️ 게임 설정</h2>
+
+            <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
+                <label class="label" style="color: var(--accent); font-weight:bold;">🤖 사용할 AI 모델 선택</label>
+                <select id="aiProviderSelect" onchange="toggleAiInput(this.value)" +
+                    style="margin-top:5px; margin-bottom:15px;">
+                    <option value="openai">OpenAI (GPT-4o-mini)</option>
+                    <option value="gemini">Google (Gemini 1.5 Flash)</option>
+                </select>
+
+                <div id="openaiKeyArea">
+                    <label class="label">🔑 OpenAI API Key</label>
+                    <input type="password" id="openaiKeyInput" placeholder="sk-..." onchange="saveApiKeys()">
+                </div>
+
+                <div id="geminiKeyArea" style="display:none;">
+                    <label class="label">🔑 Google Gemini API Key</label>
+                    <input type="password" id="geminiKeyInput" placeholder="AIza..." onchange="saveApiKeys()">
+                    <p style="font-size:0.7rem; color:#888; margin-top:5px;">
+                        Gemini API는 구글 AI Studio에서 무료로 발급 가능합니다.
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; padding: 15px; background: #252525; border-radius: 8px;">
+                <label class="switch-container">
+                    <span style="font-weight:bold; color:#e84393;">🔗 듀오 우선 배정 활성화</span>
+                    <input type="checkbox" id="duoToggle" onchange="toggleDuoActive(this.checked)" checked>
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <h3 style="margin-top:0;">메타 가중치</h3>
+            <div id="weightInputs"></div>
+            <button class="btn-save" onclick="closeModal('settingsModal'); playSound('click');">닫기</button>
+        </div>
+    </div>
+
+    <!-- AI 분석 결과 모달 -->
+    <div id="aiModal" class="modal">
+        <div class="modal-content" style="max-width:600px; min-height:220px;">
+            <span class="close-btn" onclick="closeModal('aiModal')">&times;</span>
+            <h2>🤖 AI 전력 분석 결과</h2>
+            <div id="aiLoading"
+                style="display:none; text-align:center; padding:30px 0; color:#0ac8b9; font-size:1.2rem;">
+                <span class="loader" style="margin-right:10px;"></span>AI가 분석 중입니다...
+            </div>
+            <div id="aiResultContent" style="min-height:120px; margin-top:10px;"></div>
+
+        </div>
+    </div>
+</body>
+
+</html>
