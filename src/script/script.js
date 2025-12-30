@@ -12,8 +12,6 @@ import './gemini.js';
 let IS_DUO_ACTIVE = true;
 // let tempSelectedChamps = []; // 중복 선언 방지: 이미 다른 파일에서 선언됨
 
-// const safeChampionList = (typeof championList !== 'undefined') ? championList : []; // championList가 정의되지 않아 발생하는 ReferenceError 해결
-
 // [초기화] URL 파라미터 확인 및 데이터 로드
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -120,6 +118,7 @@ function showModal(id) {
         el.classList.add('show');
     }
 }
+window.showModal = showModal;
 
 function openSettings() {
     const el = document.getElementById('settingsModal');
@@ -140,6 +139,7 @@ function openChampModal() {
         updateChampCount();
     }
 }
+window.openChampModal = openChampModal;
 
 function filterChampGrid() {
     const search = document.getElementById('champSearch');
@@ -203,6 +203,7 @@ function renderList() {
 }
 
 function saveAndRender() { localStorage.setItem('lol_cw_v20_8', JSON.stringify(players)); renderList(); }
+window.saveAndRender = saveAndRender;
 function loadData() { const d = localStorage.getItem('lol_cw_v20_8'); if (d) { players = JSON.parse(d); renderList(); } }
 function resetAll() { if (confirm('리셋?')) { players = []; document.getElementById('resultArea').style.display = 'none'; saveAndRender(); } }
 function exportPlayerCode() { /* Deprecated */ }

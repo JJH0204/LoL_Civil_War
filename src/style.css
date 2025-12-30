@@ -1,3 +1,24 @@
+/* 설정 모달 내 API 키 입력 필드 스타일 */
+#openaiKeyInput, #geminiKeyInput {
+    width: 100%;
+    background: #181c24;
+    border: 1.5px solid #0ac8b9;
+    color: #0ac8b9;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-top: 6px;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+#openaiKeyInput:focus, #geminiKeyInput:focus {
+    border-color: #6c5ce7;
+    box-shadow: 0 0 0 2px #6c5ce733;
+    background: #22263a;
+    color: #fff;
+}
 .btn-ai-analyze {
     background: linear-gradient(90deg, #0ac8b9 0%, #6c5ce7 100%);
     color: #fff;

@@ -1,3 +1,12 @@
+// AI 분석 캐시: 팀 상태 해시 → 결과 텍스트
+window.aiAnalysisCache = {};
+function getTeamHash() {
+    // 팀 상태를 문자열로 serialize (순서 보장)
+    const blue = window.lastBlueSlots ? JSON.stringify(window.lastBlueSlots) : '';
+    const red = window.lastRedSlots ? JSON.stringify(window.lastRedSlots) : '';
+    return blue + '|' + red;
+}
+
 // 전역 변수 선언 및 동기화
 window.AI_PROVIDER = localStorage.getItem('ai_provider') || 'openai';
 window.OPENAI_API_KEY = localStorage.getItem('openai_key') || '';
@@ -37,13 +46,13 @@ function createAiPrompt() {
     const system = '당신은 LoL 전문 해설가입니다. 분석적이고 위트 있게 게임 양상을 예측해주세요.';
     let user = `[블루팀]\n`;
     LANES.forEach(l => {
-        const p = lastBlueSlots[l];
+        const p = window.lastBlueSlots[l];
         const c = (p && p.champ && p.champ.length) ? p.champ.map(id => getChampName(id)).join(',') : '모름';
         user += `- ${LANE_NAMES[l]}: ${p ? p.name : '비어있음'} (${p ? p.tierName : '-'}) [${c}]\n`;
     });
     user += `\n[레드팀]\n`;
     LANES.forEach(l => {
-        const p = lastRedSlots[l];
+        const p = window.lastRedSlots[l];
         const c = (p && p.champ && p.champ.length) ? p.champ.map(id => getChampName(id)).join(',') : '모름';
         user += `- ${LANE_NAMES[l]}: ${p ? p.name : '비어있음'} (${p ? p.tierName : '-'}) [${c}]\n`;
     });
@@ -106,7 +115,9 @@ async function fetchGeminiResponse(key, prompt) {
 
 // AI 분석 메인 함수
 async function analyzeGameAI() {
-    if (!lastBlueSlots || !lastRedSlots) return alert("먼저 팀 배정을 완료해주세요.");
+    // console.log('[AI] lastBlueSlots:', window.lastBlueSlots);
+    // console.log('[AI] lastRedSlots:', window.lastRedSlots);
+    if (!window.lastBlueSlots || !window.lastRedSlots) return alert("먼저 팀 배정을 완료해주세요.");
     const apiKey = (AI_PROVIDER === 'gemini') ? GEMINI_API_KEY : OPENAI_API_KEY;
     if (!apiKey) { alert("API Key가 없습니다. 설정에서 입력해주세요."); openSettings(); return; }
 
@@ -115,12 +126,22 @@ async function analyzeGameAI() {
     const content = document.getElementById('aiResultContent');
     showModal('aiModal'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = '';
 
+    const teamHash = getTeamHash();
+    if (window.aiAnalysisCache[teamHash]) {
+        loading.style.display = 'none';
+        content.style.display = 'block';
+        renderAiResultWithShare(content, window.aiAnalysisCache[teamHash]);
+        return;
+    }
+
     const prompt = createAiPrompt();
     try {
         let aiText = "";
         if (AI_PROVIDER === 'gemini') aiText = await fetchGeminiResponse(apiKey, prompt);
         else aiText = await fetchOpenAIResponse(apiKey, prompt);
-        loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = marked.parse(aiText);
+        window.aiAnalysisCache[teamHash] = aiText;
+        loading.style.display = 'none'; content.style.display = 'block';
+        renderAiResultWithShare(content, aiText);
     } catch (error) {
         loading.style.display = 'none'; content.style.display = 'block';
         content.innerHTML = `<p style=\"color: #e74c3c;\">⚠️ 오류: ${error.message}</p>`;
@@ -132,6 +153,29 @@ async function analyzeGameAI() {
             'API Key: ' + (apiKey ? (apiKey.slice(0,6) + '...') : '없음') + '\n' +
             'Prompt: ' + (prompt ? prompt.slice(0,120) + (prompt.length>120?'...':'') : '없음');
         alert(debugMsg);
+    }
+}
+
+// 분석 결과 + 디스코드 공유 버튼 렌더링
+function renderAiResultWithShare(contentEl, aiText) {
+    contentEl.innerHTML = marked.parse(aiText) +
+        `<div style="margin-top:24px; text-align:right;">
+            <button id="btnCopyAiResult" class="btn-icon" style="background:#5865F2; color:#fff; font-weight:bold; border:none; padding:10px 18px; border-radius:6px; font-size:1rem;">
+                📋 디스코드로 공유(텍스트 복사)
+            </button>
+        </div>`;
+    const btn = document.getElementById('btnCopyAiResult');
+    if (btn) {
+        btn.onclick = function() {
+            const plain = aiText.replace(/<[^>]+>/g, '');
+            navigator.clipboard.writeText(plain).then(() => {
+                btn.innerText = '✅ 복사 완료!';
+                setTimeout(()=>{btn.innerText='📋 디스코드로 공유(텍스트 복사)';}, 1500);
+            }).catch(()=>{
+                btn.innerText = '❌ 복사 실패';
+                setTimeout(()=>{btn.innerText='📋 디스코드로 공유(텍스트 복사)';}, 1500);
+            });
+        };
     }
 }
 

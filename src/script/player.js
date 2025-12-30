@@ -2,8 +2,21 @@ var players = [];
 if (typeof window !== 'undefined') {
     window.players = players;
 }
+
+let _tempSelectedChamps = [];
+Object.defineProperty(window, 'tempSelectedChamps', {
+    get() { return _tempSelectedChamps; },
+    set(v) { _tempSelectedChamps = v; },
+    configurable: true
+});
 let editingId = null;
-let tempSelectedChamps = [];
+
+// tempSelectedChamps를 항상 window에 동기화하는 setter 함수 사용
+function setTempSelectedChamps(arr) {
+    window.tempSelectedChamps = arr;
+}
+
+// 기존 코드에서 tempSelectedChamps = [] 또는 tempSelectedChamps.push 등 사용되는 부분을 setTempSelectedChamps로 래핑
 
 function openModal(mode, id = null) {
     const modal = document.getElementById('playerModal');
@@ -14,7 +27,7 @@ function openModal(mode, id = null) {
     const champArea = document.getElementById('champSelectionArea');
     const duoSel = document.getElementById('pDuoLink');
 
-    tempSelectedChamps = [];
+    setTempSelectedChamps([]);
 
     if (duoArea && champArea) {
         if (mode === 'edit' && window.IS_DUO_ACTIVE) {
@@ -22,9 +35,9 @@ function openModal(mode, id = null) {
             champArea.style.flex = '2';
             if (duoSel) {
                 duoSel.innerHTML = '<option value="">없음</option>';
-                players.forEach(p => {
+                window.players.forEach(p => {
                     if (p.id !== id) {
-                        let selected = (players.find(x => x.id === id).duoId == p.id) ? 'selected' : '';
+                        let selected = (window.players.find(x => x.id === id)?.duoId == p.id) ? 'selected' : '';
                         duoSel.innerHTML += `<option value="${p.id}" ${selected}>${p.name}</option>`;
                     }
                 });
@@ -35,18 +48,37 @@ function openModal(mode, id = null) {
         }
     }
 
+    const setVal = (eid, val) => {
+        const e = document.getElementById(eid);
+        if (!e) return;
+        if (e.tagName === 'SELECT') {
+            // 값이 없는 경우 option 추가 후 세팅
+            if (![...e.options].some(opt => opt.value == val)) {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.text = val;
+                e.appendChild(opt);
+            }
+        }
+        e.value = val;
+    };
+
     if (mode === 'new') {
         editingId = null;
         if (title) title.innerText = "새 참가자 등록";
-        const nEl = document.getElementById('pName');
-        if (nEl) nEl.value = '';
+        setVal('pName', '');
+        setVal('pTierCombined', '');
+        setVal('pTargetPos', '');
+        setVal('pSubPos', '');
+        setVal('pMainPos', '');
+        setVal('pAvoidPos', '');
+        setTempSelectedChamps([]);
         renderSelectedChampsPreview();
     } else {
         editingId = id;
         if (title) title.innerText = "정보 수정";
-        const p = players.find(x => x.id === id);
+        const p = window.players.find(x => x.id === id);
         if (p) {
-            const setVal = (eid, val) => { const e = document.getElementById(eid); if (e) e.value = val; };
             setVal('pName', p.name);
             setVal('pTierCombined', p.baseScore);
             setVal('pTargetPos', p.targetPos);
@@ -54,9 +86,9 @@ function openModal(mode, id = null) {
             setVal('pMainPos', p.mainPos);
             setVal('pAvoidPos', p.avoidPos);
             if (Array.isArray(p.champ)) {
-                tempSelectedChamps = [...p.champ];
+                setTempSelectedChamps([...p.champ]);
             } else {
-                tempSelectedChamps = [];
+                setTempSelectedChamps([]);
             }
             renderSelectedChampsPreview();
         }
@@ -82,7 +114,7 @@ function renderSelectedChampsPreview() {
         return;
     }
 
-    tempSelectedChamps.forEach(id => {
+    window.tempSelectedChamps.forEach(id => {
         const img = document.createElement('img');
         img.src = `champion_images/${id}.png`;
         img.className = 'champ-icon-small';
@@ -91,14 +123,14 @@ function renderSelectedChampsPreview() {
 }
 
 function toggleChampSelection(id) {
-    if (tempSelectedChamps.includes(id)) {
-        tempSelectedChamps = tempSelectedChamps.filter(c => c !== id);
+    if (window.tempSelectedChamps.includes(id)) {
+        setTempSelectedChamps(window.tempSelectedChamps.filter(c => c !== id));
     } else {
-        if (tempSelectedChamps.length >= 10) {
+        if (window.tempSelectedChamps.length >= 10) {
             alert("최대 10명까지만 선택 가능합니다.");
             return;
         }
-        tempSelectedChamps.push(id);
+        setTempSelectedChamps([...window.tempSelectedChamps, id]);
     }
     updateChampGridSelection();
     updateChampCount();
@@ -108,7 +140,7 @@ function updateChampGridSelection() {
     const items = document.querySelectorAll('.champ-item');
     items.forEach(item => {
         const id = item.getAttribute('data-id');
-        if (tempSelectedChamps.includes(id)) {
+        if (window.tempSelectedChamps.includes(id)) {
             item.classList.add('selected');
         } else {
             item.classList.remove('selected');
@@ -118,7 +150,7 @@ function updateChampGridSelection() {
 
 function updateChampCount() {
     const el = document.getElementById('champCountDisplay');
-    if (el) el.innerText = `${tempSelectedChamps.length} / 10 선택됨`;
+    if (el) el.innerText = `${window.tempSelectedChamps.length} / 10 선택됨`;
 }
 
 function confirmChampSelect() {
@@ -152,7 +184,7 @@ function savePlayer() {
         subPos: document.getElementById('pSubPos').value,
         mainPos: document.getElementById('pMainPos').value,
         avoidPos: document.getElementById('pAvoidPos').value,
-        champ: [...tempSelectedChamps],
+        champ: [...window.tempSelectedChamps],
         duoId: selectedDuoId
     };
 
@@ -186,8 +218,8 @@ function savePlayer() {
 
 function removePlayer(id) {
     if (confirm("삭제하시겠습니까?")) {
-        players = players.filter(p => p.id !== id);
-        players.forEach(p => { if (p.duoId === id) p.duoId = null; });
+        window.players = window.players.filter(p => p.id !== id);
+        window.players.forEach(p => { if (p.duoId === id) p.duoId = null; });
         saveAndRender();
     }
 }
