@@ -1,5 +1,3 @@
-
-// 참가자 관리/등록 관련 데이터 및 함수
 let players = [];
 let editingId = null;
 let tempSelectedChamps = [];
