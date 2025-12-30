@@ -45,6 +45,13 @@
 
         <div class="player-list" id="playerList"></div>
 
+
+        <div class="import-box" style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="importCode" placeholder="공유 코드 붙여넣기..." style="flex:2; background: #1a1a1a; border:1px solid #444; color:#0ac8b9; font-size: 0.9rem;">
+            <button class="btn-icon" onclick="importPlayerCode()" style="flex:1; background: #333; color: white; border:1px solid #555;">📥 추가</button>
+            <!-- <button class="btn-icon" onclick="generateModalCode()" style="flex:1; background: #444; color: #ccc; border: 1px solid #555;">📤 코드 생성</button> -->
+        </div>
+
         <button class="btn-calc" onclick="calculateAndAssign()">⚖️ 정밀 밸런싱 시작</button>
 
         <div class="result-area" id="resultArea">
@@ -111,6 +118,7 @@
                 </div>
             </div>
             <button class="btn-save" onclick="savePlayer()">저장</button>
+            <button class="btn-share" onclick="generateModalCode()" style="margin-top:10px; width:100%; background:#444; color:#ccc; border: 1px solid #555;">📤 코드 생성</button>
         </div>
     </div>
 
