@@ -54,9 +54,6 @@
         <button class="btn-calc" onclick="calculateAndAssign(); playSound('click');">⚖️ 정밀 밸런싱 시작</button>
 
         <div class="result-area" id="resultArea">
-            <button class="btn-ai-analyze" onclick="analyzeGameAI(); playSound('click');">
-                🤖 AI 전력 분석 및 승부 예측
-            </button>
             <div class="team blue">
                 <div class="team-header">
                     <h3 style="color: #5dade2;">BLUE TEAM</h3>
@@ -71,6 +68,10 @@
                 </div>
                 <div id="redList"></div>
             </div>
+        </div>
+
+        <div id="aiAnalyzeSection" style="display:none; width:100%; margin-top:20px;">
+            <button class="btn-ai-analyze" onclick="analyzeGameAI(); playSound('click');">🤖 AI 전력 분석 및 승부 예측</button>
         </div>
 
         <div id="shareSection" style="display:none; width:100%; margin-top:20px;">

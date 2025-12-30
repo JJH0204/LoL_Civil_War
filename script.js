@@ -950,4 +950,7 @@ function calculateAndAssign() {
     }
     const shareSec = document.getElementById('shareSection');
     if (shareSec) shareSec.style.display = 'flex';
+
+    const aiAnalyzeSec = document.getElementById('aiAnalyzeSection');
+    if (aiAnalyzeSec) aiAnalyzeSec.style.display = 'flex';
 }
